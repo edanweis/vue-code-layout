@@ -22,6 +22,7 @@ import SplitLayout from './SplitLayout/SplitLayout.vue'
 import SplitTab from './SplitLayout/SplitTab.vue'
 import SplitTabItem from './SplitLayout/SplitTabItem.vue'
 import SplitN from './SplitLayout/SplitN.vue'
+import { createLayoutStore } from './Composeable/createLayoutStore'
 
 export {
   CodeLayout,
@@ -39,15 +40,23 @@ export {
 }
 
 export { useLayoutPersistence } from './Composeable/useLayoutPersistence'
+export { useLayoutStore } from './Composeable/createLayoutStore'
 export type { 
   LayoutPersistenceState, 
   LayoutPersistenceVersion, 
   UseLayoutPersistenceOptions 
 } from './Composeable/useLayoutPersistence'
+export type { LayoutStore } from './Composeable/createLayoutStore'
+
+// Create the layout store plugin
+export const layoutStore = createLayoutStore()
 
 export default {
   install(app: App) {
     app.component('CodeLayout', CodeLayout);
     app.component('SplitLayout', SplitLayout);
+    
+    // Install the layout store plugin
+    layoutStore.install(app)
   },
 }

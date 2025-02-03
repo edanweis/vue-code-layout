@@ -2,6 +2,21 @@ import { ref } from 'vue'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { onUnmounted } from 'vue'
 
+// Add deprecation warning
+const warnOnce = (() => {
+  let warned = false
+  return () => {
+    if (!warned) {
+      console.warn(
+        '[vue-code-layout] Direct usage of useLayoutPersistence is deprecated. ' +
+        'Please use the plugin-based approach with useLayoutStore instead. ' +
+        'See documentation for migration guide.'
+      )
+      warned = true
+    }
+  }
+})()
+
 export interface LayoutPersistenceState {
   id: string // UUID
   state_id: string
@@ -92,6 +107,9 @@ export interface UseLayoutPersistenceOptions {
 }
 
 export function useLayoutPersistence(options: UseLayoutPersistenceOptions) {
+  // Show deprecation warning
+  warnOnce()
+
   const { 
     supabase, 
     stateId: initialStateId, 
