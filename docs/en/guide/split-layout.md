@@ -20,7 +20,7 @@ For example:
 ```ts /src/main.ts
 import { createApp } from 'vue'
 import App from './App.vue'
-import CodeLayout from 'vue-code-layout'
+import CodeLayout from '@edanweis/vue-code-layout'
 import 'vue-code-layout/lib/vue-code-layout.css'
 
 createApp(App)
@@ -58,7 +58,7 @@ createApp(App)
 
 <script lang="ts" setup>
 import { ref, nextTick, h } from 'vue';
-import type { CodeLayoutSplitNInstance, CodeLayoutSplitNPanelInternal, CodeLayoutSplitNGridInternal } from 'vue-code-layout';
+import type { CodeLayoutSplitNInstance, CodeLayoutSplitNPanelInternal, CodeLayoutSplitNGridInternal } from '@edanweis/vue-code-layout';
 
 const colors = [
   '#fb0',
@@ -185,7 +185,7 @@ You can add your panels to the components, or obtain panel instances for corresp
 To operate the SplitLayout component, you need to first obtain its instance, and then call the method on the instance:
 
 ```ts
-import { CodeLayoutSplitNInstance } from 'vue-code-layout';
+import { CodeLayoutSplitNInstance } from '@edanweis/vue-code-layout';
 
 //Bind the splitLayoutRef variable to the SplitLayout component through the ref attribute
 const splitLayoutRef = ref<CodeLayoutSplitNInstance>();
@@ -475,7 +475,7 @@ If you only need to customize certain parts of the rendering, you can import the
 </template>
 
 <script setup lang="ts">
-import { SplitLayout, SplitTabItem } from 'vue-code-layout';
+import { SplitLayout, SplitTabItem } from '@edanweis/vue-code-layout';
 //...Other codes...
 </script>
 ```

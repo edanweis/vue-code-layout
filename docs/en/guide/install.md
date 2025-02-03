@@ -11,7 +11,7 @@ Suggest that you globally import components for the most convenient use.
 ```js
 //main.js
 import 'vue-code-layout/lib/vue-code-layout.css'
-import CodeLayout from 'vue-code-layout'
+import CodeLayout from '@edanweis/vue-code-layout'
 
 createApp(App)
   .use(CodeLayout)
@@ -34,7 +34,7 @@ Then import the components where you need to use them:
 import { defineComponent } from 'vue'
 
 //Import Components
-import { CodeLayout } from 'vue-code-layout';
+import { CodeLayout } from '@edanweis/vue-code-layout';
 
 export default defineComponent({
   //Registration component

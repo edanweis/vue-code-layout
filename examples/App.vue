@@ -10,7 +10,7 @@
       </div>
       <div>
         <a href="https://www.npmjs.com/package/vue-code-layout" target="_blank"><img class="m-1" src="https://img.shields.io/npm/v/vue-code-layout.svg?style=for-the-badge" alt="vue-marquee-text-component npm"></a>
-        <a href="https://github.com/imengyu/vue-code-layout/blob/master/LICENSE.md" target="_blank"><img alt="GitHub License" src="https://img.shields.io/github/license/imengyu/vue-code-layout?style=for-the-badge"></a>
+        <a href="https://github.com/edanweis/vue-code-layout/blob/master/LICENSE.md" target="_blank"><img alt="GitHub License" src="https://img.shields.io/github/license/edanweis/vue-code-layout?style=for-the-badge"></a>
         <a href="https://www.npmjs.com/package/vue-code-layout" target="_blank"><img alt="NPM Downloads" src="https://img.shields.io/npm/d18m/%40imengyu%2Fvue3-context-menu?style=for-the-badge"></a>
       </div>
     </div>

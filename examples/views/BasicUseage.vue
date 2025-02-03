@@ -78,7 +78,7 @@ import type { MenuOptions } from '@imengyu/vue3-context-menu';
 import { 
   CodeLayout, CodeLayoutScrollbar, SplitLayout, type CodeLayoutSplitNInstance, 
   type CodeLayoutConfig, type CodeLayoutInstance, type CodeLayoutPanelInternal 
-} from 'vue-code-layout';
+} from '@edanweis/vue-code-layout';
 import TestContent1 from '../assets/text/Useage.vue?raw';
 //import TestContent1 from '../assets/text/Useage2.vue?raw';
 import TestContent2 from '../../README.md?raw';

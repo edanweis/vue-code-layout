@@ -4,7 +4,7 @@
 
 A Vue editor layout component that like VSCode and can be used to develop web editors.
 
-![screenshot](https://raw.githubusercontent.com/imengyu/vue-code-layout/master/screenshot/first.jpg)
+![screenshot](https://raw.githubusercontent.com/edanweis/vue-code-layout/master/screenshot/first.jpg)
 
 ---
 
@@ -33,7 +33,7 @@ Import in main.ts:
 
 ```js
 import 'vue-code-layout/lib/vue-code-layout.css'
-import VueCodeLayout from 'vue-code-layout'
+import VueCodeLayout from '@edanweis/vue-code-layout'
 
 createApp(App)
   .use(VueCodeLayout)  
@@ -56,7 +56,7 @@ For detailed usage, please refer to the documentation.
 ## Develop
 
 ```shell
-git clone git@github.com:imengyu/vue-code-layout.git
+git clone git@github.com:edanweis/vue-code-layout.git
 cd vue-code-layout
 npm install
 npm run dev        # Development serve project

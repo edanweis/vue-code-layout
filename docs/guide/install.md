@@ -15,7 +15,7 @@ npm install -save vue-code-layout
 ```js
 //main.js
 import 'vue-code-layout/lib/vue-code-layout.css'
-import CodeLayout from 'vue-code-layout'
+import CodeLayout from '@edanweis/vue-code-layout'
 
 createApp(App)
   .use(CodeLayout)
@@ -38,7 +38,7 @@ import 'vue-code-layout/lib/vue-code-layout.css'
 import { defineComponent } from 'vue'
 
 //导入组件
-import { CodeLayout } from 'vue-code-layout';
+import { CodeLayout } from '@edanweis/vue-code-layout';
 
 export default defineComponent({
   //注册组件

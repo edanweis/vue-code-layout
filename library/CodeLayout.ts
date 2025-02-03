@@ -8,7 +8,7 @@ import type { CodeLayoutLangDefine } from "./Language";
  * 
  * Default data can be copied when creating objects:
  * ```ts
-  import { defaultCodeLayoutConfig } from 'vue-code-layout';
+  import { defaultCodeLayoutConfig } from '@edanweis/vue-code-layout';
 
   const config = reactive<CodeLayoutConfig>({
     ...defaultCodeLayoutConfig,

@@ -4,7 +4,7 @@
 
 一个仿 VSCode 的 Vue 编辑器布局组件，可以用于开发Web编辑器。
 
-![截图](https://raw.githubusercontent.com/imengyu/vue-code-layout/master/screenshot/first.jpg)
+![截图](https://raw.githubusercontent.com/edanweis/vue-code-layout/master/screenshot/first.jpg)
 
 ---
 
@@ -30,7 +30,7 @@ npm install -save vue-code-layout
 
 ```js
 import 'vue-code-layout/lib/vue-code-layout.css'
-import VueCodeLayout from 'vue-code-layout'
+import VueCodeLayout from '@edanweis/vue-code-layout'
 
 createApp(App)
   .use(VueCodeLayout)  
@@ -48,7 +48,7 @@ createApp(App)
 ## 开发
 
 ```shell
-git clone git@github.com:imengyu/vue-code-layout.git
+git clone git@github.com:edanweis/vue-code-layout.git
 cd vue-code-layout
 npm install
 npm run dev        # Development serve project

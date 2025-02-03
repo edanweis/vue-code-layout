@@ -44,7 +44,7 @@ create index idx_layout_state_versions_created_at on public.layout_state_version
 在您的组件中导入并初始化 `useLayoutPersistence` 组合式函数：
 
 ```typescript
-import { useLayoutPersistence } from 'vue-code-layout'
+import { useLayoutPersistence } from '@edanweis/vue-code-layout'
 import { supabase } from './supabase-client'
 
 const layoutState = useLayoutPersistence({
@@ -168,7 +168,7 @@ const layoutState = useLayoutPersistence({
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { useLayoutPersistence } from 'vue-code-layout'
+import { useLayoutPersistence } from '@edanweis/vue-code-layout'
 
 const layoutRef = ref()
 const versions = ref([])

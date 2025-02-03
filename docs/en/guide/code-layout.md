@@ -21,7 +21,7 @@ For example:
 ```ts /src/main.ts
 import { createApp } from 'vue'
 import App from './App.vue'
-import CodeLayout from 'vue-code-layout'
+import CodeLayout from '@edanweis/vue-code-layout'
 import 'vue-code-layout/lib/vue-code-layout.css'
 
 createApp(App)
@@ -50,7 +50,7 @@ createApp(App)
 import { ref, reactive, onMounted, nextTick, h } from 'vue';
 import IconFile from './IconFile.vue';
 import IconSearch from './IconSearch.vue';
-import { type CodeLayoutConfig, type CodeLayoutInstance, defaultCodeLayoutConfig } from 'vue-code-layout';
+import { type CodeLayoutConfig, type CodeLayoutInstance, defaultCodeLayoutConfig } from '@edanweis/vue-code-layout';
 
 //2. Define the basic definition of layout
 const config = reactive<CodeLayoutConfig>({
@@ -228,7 +228,7 @@ You can add your panels to the components, or obtain panel instances for corresp
 To using the CodeLayout component, you need to first obtain its instance, and then call the method on the instance:
 
 ```ts
-import { CodeLayoutInstance } from 'vue-code-layout';
+import { CodeLayoutInstance } from '@edanweis/vue-code-layout';
 
 //Bind the codeLayoutInstance variable to the CodeLayout component through the ref attribute
 const codeLayoutInstance = ref<CodeLayoutInstance>();
@@ -473,7 +473,7 @@ CodeLayout supports two events, `canLoadLayout` and `canSaveLayout`. In the even
 
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue';
-import type { CodeLayoutInstance } from 'vue-code-layout';
+import type { CodeLayoutInstance } from '@edanweis/vue-code-layout';
 
 const codeLayout = ref<CodeLayoutInstance>();
 
@@ -502,7 +502,7 @@ To save this data, simply call the `saveLayout` function and save the config var
 
 ```ts
 import { toRaw, reactive } from 'vue';
-import type { CodeLayoutConfig } from 'vue-code-layout';
+import type { CodeLayoutConfig } from '@edanweis/vue-code-layout';
 
 const config = reactive<CodeLayoutConfig>({
   //...
@@ -520,7 +520,7 @@ The basic layout data only needs to be reloaded into variables after saving.
 
 ```ts
 import { toRaw, reactive } from 'vue';
-import type { CodeLayoutConfig } from 'vue-code-layout';
+import type { CodeLayoutConfig } from '@edanweis/vue-code-layout';
 
 //Load basic layout data
 const config = reactive<CodeLayoutConfig>({

@@ -56,9 +56,9 @@ import IconMarkdown from '../assets/icons/IconMarkdown.vue';
 import IconVue from '../assets/icons/IconVue.vue';
 import IconFile from '../assets/icons/IconFile.vue';
 import { ref, onMounted, nextTick, h, onBeforeUnmount, reactive } from 'vue';
-import type { CodeLayoutPanelInternal, CodeLayoutSplitNConfig, CodeLayoutSplitNPanelInternal } from 'vue-code-layout';
-import type { CodeLayoutSplitNGridInternal, CodeLayoutSplitNInstance } from 'vue-code-layout';
-import { defaultSplitLayoutConfig, SplitLayout, SplitTabItem } from 'vue-code-layout';
+import type { CodeLayoutPanelInternal, CodeLayoutSplitNConfig, CodeLayoutSplitNPanelInternal } from '@edanweis/vue-code-layout';
+import type { CodeLayoutSplitNGridInternal, CodeLayoutSplitNInstance } from '@edanweis/vue-code-layout';
+import { defaultSplitLayoutConfig, SplitLayout, SplitTabItem } from '@edanweis/vue-code-layout';
 import ContextMenuGlobal from '@imengyu/vue3-context-menu';
 
 const colors = [

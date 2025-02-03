@@ -35,7 +35,7 @@
 
 <script lang="ts" setup>
 import { ref, reactive, onMounted, nextTick, h } from 'vue';
-import { type CodeLayoutConfig, type CodeLayoutInstance, defaultCodeLayoutConfig } from 'vue-code-layout';
+import { type CodeLayoutConfig, type CodeLayoutInstance, defaultCodeLayoutConfig } from '@edanweis/vue-code-layout';
 import IconFile from '../../examples/assets/icons/IconFile.vue';
 import IconSearch from '../../examples/assets/icons/IconSearch.vue';
 
@@ -185,7 +185,7 @@ onMounted(() => {
 要操作 CodeLayout 组件，需要先获取它的实例，然后调用实例上的方法：
 
 ```ts
-import { CodeLayoutInstance } from 'vue-code-layout';
+import { CodeLayoutInstance } from '@edanweis/vue-code-layout';
 
 //将 codeLayoutInstance 变量通过 ref 属性绑定到 CodeLayout 组件上
 const codeLayoutInstance = ref<CodeLayoutInstance>();
@@ -459,7 +459,7 @@ onMounted(() => {
 
 ```ts
 import { toRaw, reactive } from 'vue';
-import { type CodeLayoutConfig } from 'vue-code-layout';
+import { type CodeLayoutConfig } from '@edanweis/vue-code-layout';
 
 const config = reactive<CodeLayoutConfig>({
   //...省略
@@ -477,7 +477,7 @@ localStorage.setItem('LayoutConfig', toRaw(config)); //保存布局
 
 ```ts
 import { toRaw, reactive } from 'vue';
-import { type CodeLayoutConfig } from 'vue-code-layout';
+import { type CodeLayoutConfig } from '@edanweis/vue-code-layout';
 
 //加载基础布局数据至 config 变量中。
 const config = reactive<CodeLayoutConfig>({

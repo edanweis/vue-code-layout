@@ -44,7 +44,7 @@ create index idx_layout_state_versions_created_at on public.layout_state_version
 Import and initialize the `useLayoutPersistence` composable in your component:
 
 ```typescript
-import { useLayoutPersistence } from 'vue-code-layout'
+import { useLayoutPersistence } from '@edanweis/vue-code-layout'
 import { supabase } from './supabase-client'
 
 const layoutState = useLayoutPersistence({
@@ -168,7 +168,7 @@ Here's a complete example showing how to implement layout persistence with versi
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { useLayoutPersistence } from 'vue-code-layout'
+import { useLayoutPersistence } from '@edanweis/vue-code-layout'
 
 const layoutRef = ref()
 const versions = ref([])

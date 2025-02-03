@@ -198,7 +198,7 @@ if (data) {
 在创建对象时可以复制默认数据：
 
 ```ts
-import { defaultCodeLayoutConfig } from 'vue-code-layout';
+import { defaultCodeLayoutConfig } from '@edanweis/vue-code-layout';
 
 const config = reactive<CodeLayoutConfig>({
   ...defaultCodeLayoutConfig,

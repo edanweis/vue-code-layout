@@ -46,7 +46,7 @@
 
 <script lang="ts" setup>
 import { ref, nextTick, h } from 'vue';
-import { type CodeLayoutSplitNInstance, type CodeLayoutPanelInternal, type CodeLayoutSplitNGridInternal } from 'vue-code-layout';
+import { type CodeLayoutSplitNInstance, type CodeLayoutPanelInternal, type CodeLayoutSplitNGridInternal } from '@edanweis/vue-code-layout';
 
 const colors = [
   '#fb0',
@@ -171,7 +171,7 @@ h2 {
 要操作 SplitLayout 组件，需要先获取它的实例，然后调用实例上的方法：
 
 ```ts
-import { CodeLayoutSplitNInstance } from 'vue-code-layout';
+import { CodeLayoutSplitNInstance } from '@edanweis/vue-code-layout';
 
 //将 splitLayoutRef 变量通过 ref 属性绑定到 SplitLayout 组件上
 const splitLayoutRef = ref<CodeLayoutSplitNInstance>();
@@ -463,7 +463,7 @@ SplitLayout 支持自定义渲染标签页按钮，你可以自定义渲染某�
 </template>
 
 <script setup lang="ts">
-import { SplitLayout, SplitTabItem } from 'vue-code-layout';
+import { SplitLayout, SplitTabItem } from '@edanweis/vue-code-layout';
 //...省略其他代码
 </script>
 ```
