@@ -66,6 +66,7 @@ export default defineConfig({
             { text: 'CodeLayoutActionsRender', link: '/en/api/CodeLayoutActionsRender' },
             { text: 'CodeLayoutCustomizeLayout', link: '/en/api/CodeLayoutCustomizeLayout' },
             { text: 'OverflowCollapseList', link: '/en/api/OverflowCollapseList' },
+            { text: 'Layout Persistence', link: '/en/api/LayoutPersistence' },
           ]
         }
       }
@@ -128,6 +129,7 @@ export default defineConfig({
             { text: 'CodeLayoutActionsRender', link: '/api/CodeLayoutActionsRender' },
             { text: 'CodeLayoutCustomizeLayout', link: '/api/CodeLayoutCustomizeLayout' },
             { text: 'OverflowCollapseList', link: '/api/OverflowCollapseList' },
+            { text: '布局持久化', link: '/api/LayoutPersistence' },
           ]
         },
       ]
