@@ -84,7 +84,7 @@
   "bugs": {
     "url": "https://github.com/edanweis/vue-code-layout/issues"
   },
-  "homepage": "https://github.com/edanweis/vue-code-layout#readme",
+  "homepage": "https://edanweis.github.io/vue-code-layout/",
   "directories": {
     "doc": "docs",
     "example": "examples",
