@@ -5,7 +5,7 @@ import container from 'markdown-it-container';
 import { resolve } from 'path';
 
 export default defineConfig({
-  base: '/vue-code-layout-docs/',
+  base: '/vue-code-layout/',
   lang: 'zh-CN',
   title: 'vue-code-layout',
   description: 'Vue 仿 VSCode 布局组件',
