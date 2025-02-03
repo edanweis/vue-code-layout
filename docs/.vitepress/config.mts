@@ -47,6 +47,7 @@ export default defineConfig({
               items: [
                 { text: 'CodeLayout', link: '/en/guide/code-layout' },
                 { text: 'SplitLayout', link: '/en/guide/split-layout' },
+                { text: 'Layout Persistence', link: '/en/guide/layout-persistence' },
               ]
             },
             {
@@ -105,6 +106,7 @@ export default defineConfig({
           items: [
             { text: 'CodeLayout', link: '/guide/code-layout' },
             { text: 'SplitLayout', link: '/guide/split-layout' },
+            { text: '布局持久化', link: '/guide/layout-persistence' },
           ]
         },
         {
