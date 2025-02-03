@@ -1,6 +1,6 @@
 # Layout Persistence
 
-The layout persistence feature allows you to save, load, and version your layouts using Supabase as a backend. This guide explains how to set up and use the layout persistence system.
+The layout persistence feature allows you to save, load, and version control your layouts using Supabase as a backend. This guide explains how to set up and use the layout persistence system.
 
 ## Setup
 
@@ -9,7 +9,7 @@ The layout persistence feature allows you to save, load, and version your layout
 First, you need to set up the required tables in your Supabase database:
 
 ```sql
--- Create layout_states table
+-- Create layout states table
 create table public.layout_states (
   id uuid not null default gen_random_uuid(),
   state_id text not null,
@@ -20,7 +20,7 @@ create table public.layout_states (
   constraint layout_states_state_id_key unique (state_id)
 );
 
--- Create layout_state_versions table
+-- Create layout versions table
 create table public.layout_state_versions (
   id uuid not null default gen_random_uuid(),
   state_id uuid not null,
@@ -48,10 +48,10 @@ import { useLayoutPersistence } from '@edanweis/vue-code-layout'
 import { supabase } from './supabase-client'
 
 const layoutState = useLayoutPersistence({
-  supabase,                    // Your configured Supabase client
+  supabase,                    // Configured Supabase client
   stateId: 'my-layout',        // Optional: Unique identifier for this layout
-  layoutInstance: layoutRef,    // Reference to your layout component
-  autoSync: true,              // Optional: Auto-save on changes (default: true)
+  layoutInstance: layoutRef,    // Reference to the layout component
+  autoSync: true,              // Optional: Auto-save changes (default: true)
   autoSyncDebounce: 1000,      // Optional: Debounce delay in ms (default: 1000)
   onError: console.error       // Optional: Error handler
 })
@@ -62,20 +62,20 @@ const layoutState = useLayoutPersistence({
 ### Basic State Management
 
 ```typescript
-// Load the initial state
+// Load initial state
 await layoutState.loadState()
 
-// Save the current state
+// Save current state
 await layoutState.saveState()
 ```
 
 ### Version Management
 
 ```typescript
-// Create a new version
+// Create new version
 await layoutState.createVersion('Version 1')
 
-// Load a specific version
+// Load specific version
 await layoutState.loadVersion(version)
 
 // Get list of versions
@@ -84,9 +84,9 @@ const versions = layoutState.versions
 
 ### State ID Management
 
-The state ID can be provided in several ways:
+State IDs can be provided in several ways:
 
-1. **URL Parameter**:
+1. **URL Parameters**:
    ```
    https://your-app.com/layout?stateId=my-layout-1
    ```
@@ -127,7 +127,7 @@ const layoutState = useLayoutPersistence({
     team_id: '456'
   },
   
-  // Or as a function for dynamic values
+  // Or use a function for dynamic values
   additionalData: () => ({
     workspace_id: currentWorkspace.value.id,
     last_modified_by: currentUser.value.id
@@ -205,24 +205,24 @@ const handleLoadVersion = async () => {
 ## Best Practices
 
 1. **State IDs**:
-   - Use meaningful state IDs that identify the purpose of the layout
+   - Use meaningful state IDs to identify layout purposes
    - Consider using URL parameters for easy sharing
-   - Store frequently used state IDs in localStorage
+   - Store commonly used state IDs in localStorage
 
-2. **Versioning**:
-   - Create versions at meaningful points (e.g., after major changes)
+2. **Version Control**:
+   - Create versions after significant changes
    - Use descriptive version names
    - Consider including timestamps in version names
 
 3. **Error Handling**:
    - Always provide an error handler
    - Handle loading states appropriately
-   - Show feedback to users when operations succeed/fail
+   - Show success/failure feedback to users
 
 4. **Performance**:
-   - Use appropriate debounce values for auto-sync
-   - Consider disabling auto-sync for performance-critical applications
-   - Use the provided indexes in your database
+   - Use appropriate auto-sync debounce values
+   - Consider disabling auto-sync in performance-critical applications
+   - Utilize the provided database indexes
 
 ## TypeScript Support
 
@@ -243,5 +243,27 @@ interface LayoutPersistenceVersion {
   version_name: string
   layout: any         // Layout data
   created_at: string
+}
+
+interface UseLayoutPersistenceOptions {
+  supabase: SupabaseClient       // Pre-configured Supabase client
+  stateId?: string              // Optional: Unique identifier for layout state
+  layoutInstance: any           // Layout component instance
+  autoSync?: boolean            // Whether to auto-sync (default: true)
+  autoSyncDebounce?: number     // Debounce delay for auto-sync in ms (default: 1000)
+  onError?: (error: any) => void // Error handler callback
+  tables?: {                    // Custom table names
+    states?: string
+    versions?: string
+  }
+  columns?: {                   // Custom column names
+    stateId?: string
+    layout?: string
+    versionName?: string
+    createdAt?: string
+    updatedAt?: string
+  }
+  additionalData?: Record<string, any> | (() => Record<string, any>) // Additional data to include when saving states
+  additionalVersionData?: Record<string, any> | (() => Record<string, any>) // Additional data to include when saving versions
 }
 ``` 
