@@ -1,5 +1,6 @@
-
 # vue-code-layout
+
+> This is a fork of the original vue-code-layout that adds built-in state persistence with Pinia and optional Supabase integration. You can use it to automatically save and restore layout states across sessions.
 
 A Vue editor layout component that like VSCode and can be used to develop web editors.
 
@@ -18,6 +19,9 @@ English | [中文](./README.CN.md)
 * Supports VSCode outer layout and inner editor area layout
 * Support saving and loading data
 * Support defining CSS styles
+* Built-in state persistence with Pinia (optional)
+* Optional Supabase integration for cloud storage
+* Layout persistence with versioning (using Supabase)
 
 ### Install
 
@@ -43,6 +47,11 @@ For detailed usage, please refer to the documentation.
 [Documentation](https://docs.imengyu.top/vue-code-layout-docs/)
 
 [Demo](https://docs.imengyu.top/vue-code-layout-demo/)
+
+- [Getting Started](docs/en/guide/start.md)
+- [Split Layout](docs/en/guide/split-layout.md)
+- [Layout Persistence](docs/en/guide/layout-persistence.md)
+- [Internationalization](docs/en/guide/i18n.md)
 
 ## Develop
 

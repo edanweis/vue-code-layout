@@ -1,0 +1,27 @@
+{
+  "name": "vue-code-layout-examples",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@imengyu/vue3-context-menu": "^1.4.4",
+    "@supabase/supabase-js": "^2.39.3",
+    "pinia": "^2.1.7",
+    "vue": "^3.4.15",
+    "vue-router": "^4.2.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.17",
+    "@vitejs/plugin-vue": "^5.0.3",
+    "@vitejs/plugin-vue-jsx": "^3.1.0",
+    "@vue/tsconfig": "^0.5.1",
+    "sass-embedded": "^1.83.4",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.12",
+    "vue-tsc": "^1.8.27"
+  }
+}

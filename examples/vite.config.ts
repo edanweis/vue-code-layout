@@ -1,20 +1,24 @@
-import { fileURLToPath, URL } from 'node:url'
-
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
+import { resolve } from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
-    vue(),
-    vueJsx(),
+    vue({
+      template: {
+        compilerOptions: {
+          isCustomElement: (tag) => tag.includes('vue-monaco-editor')
+        }
+      }
+    }),
+    vueJsx()
   ],
-  base: './',
   resolve: {
     alias: {
-      'vue-code-layout': '../../library',
-      '@': fileURLToPath(new URL('./', import.meta.url))
+      'vue-code-layout': resolve(__dirname, '../library'),
+      '@': resolve(__dirname, '.')
     }
   }
 })

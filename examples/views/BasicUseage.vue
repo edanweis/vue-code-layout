@@ -16,14 +16,9 @@
             @canLoadLayout="loadInnerLayout"
           >
             <template #tabContentRender="{ panel }">
-              <vue-monaco-editor
-                v-if="panel.name.startsWith('file')"
-                v-model:value="panel.data.value"
-                :language="panel.data.language"
-                :path="panel.data.path"
-                theme="vs-dark"
-                :options="MONACO_EDITOR_OPTIONS"
-              />
+              <div v-if="panel.name.startsWith('file')" class="file-content">
+                <pre>{{ panel.data.value }}</pre>
+              </div>
             </template>
             <template #tabEmptyContentRender="{ grid }">
               <h2 :style="{ margin: 0 }">Empty Grid</h2>
@@ -98,11 +93,6 @@ const props = defineProps({
 const splitLayout = ref<CodeLayoutSplitNInstance>();
 const codeLayout = ref<CodeLayoutInstance>();
 
-const MONACO_EDITOR_OPTIONS = {
-  automaticLayout: true,
-  formatOnType: true,
-  formatOnPaste: true,
-}; 
 const defaultCodeLayoutConfig : CodeLayoutConfig = {
   primarySideBarSwitchWithActivityBar: true,
   primarySideBarPosition: 'left',
@@ -524,3 +514,18 @@ defineExpose({
   onResetAll
 })
 </script>
+
+<style scoped>
+.file-content {
+  padding: 1rem;
+  overflow: auto;
+  height: 100%;
+  background: #f5f5f5;
+}
+
+.file-content pre {
+  margin: 0;
+  white-space: pre-wrap;
+  font-family: monospace;
+}
+</style>

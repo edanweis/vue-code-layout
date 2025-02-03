@@ -38,6 +38,13 @@ export {
   SplitN,
 }
 
+export { useLayoutPersistence } from './Composeable/useLayoutPersistence'
+export type { 
+  LayoutPersistenceState, 
+  LayoutPersistenceVersion, 
+  UseLayoutPersistenceOptions 
+} from './Composeable/useLayoutPersistence'
+
 export default {
   install(app: App) {
     app.component('CodeLayout', CodeLayout);

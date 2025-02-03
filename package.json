@@ -1,7 +1,7 @@
 {
-  "name": "vue-code-layout",
-  "version": "1.1.2",
-  "description": "A editor layout for Vue",
+  "name": "@edanweis/vue-code-layout",
+  "version": "1.2.0",
+  "description": "A Vue editor layout component with built-in persistence",
   "main": "lib/vue-code-layout.umd.js",
   "module": "lib/vue-code-layout.es.js",
   "files": [
@@ -22,8 +22,22 @@
   "dependencies": {
     "@imengyu/vue3-context-menu": "^1.4.4"
   },
+  "peerDependencies": {
+    "@supabase/supabase-js": "^2.0.0",
+    "pinia": "^2.0.0",
+    "vue": "^3.3.4"
+  },
+  "peerDependenciesMeta": {
+    "pinia": {
+      "optional": true
+    },
+    "@supabase/supabase-js": {
+      "optional": true
+    }
+  },
   "devDependencies": {
     "@guolao/vue-monaco-editor": "^1.5.1",
+    "@supabase/supabase-js": "^2.48.1",
     "@tsconfig/node18": "^18.2.2",
     "@types/node": "^18.17.17",
     "@vitejs/plugin-vue": "^4.3.4",
@@ -31,6 +45,7 @@
     "@vue/tsconfig": "^0.4.0",
     "markdown-it-container": "^4.0.0",
     "npm-run-all2": "^6.0.6",
+    "pinia": "^2.3.1",
     "rimraf": "^5.0.5",
     "sass": "^1.69.5",
     "typescript": "~5.2.0",
@@ -46,7 +61,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/imengyu/vue-code-layout.git"
+    "url": "git+https://github.com/edanweis/vue-code-layout.git"
   },
   "keywords": [
     "vue3",
@@ -61,16 +76,18 @@
     "vscode",
     "editor",
     "layout",
-    "组件",
-    "布局",
-    "编辑器",
-    "context",
-    "menu"
+    "persistence",
+    "supabase"
   ],
-  "author": "imengyu",
+  "author": "edanweis",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/imengyu/vue-code-layout/issues"
+    "url": "https://github.com/edanweis/vue-code-layout/issues"
   },
-  "homepage": "https://github.com/imengyu/vue-code-layout#readme"
+  "homepage": "https://github.com/edanweis/vue-code-layout#readme",
+  "directories": {
+    "doc": "docs",
+    "example": "examples",
+    "lib": "lib"
+  }
 }

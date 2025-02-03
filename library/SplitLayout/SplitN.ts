@@ -42,9 +42,19 @@ export type CodeLayoutSplitCopyDirection = 'left'|'top'|'bottom'|'right';
  * Panel type definition of SplitLayout.
  */
 export class CodeLayoutSplitNPanelInternal extends CodeLayoutPanelInternal implements CodeLayoutSplitNPanel {
+  name: string = '';
+  title?: string;
+  tooltip?: string;
+  badge?: string;
+  iconSmall?: () => any;
+  iconLarge?: () => any;
+  actions?: Array<{name: string, icon?: () => any, onClick?: () => void}>;
+  data: Record<string, any> = {}; // For storing panel state
+  parentGroup: CodeLayoutSplitNGridInternal | null = null;
 
-  public constructor(context: CodeLayoutPanelHosterContext) {
-    super(context);
+  constructor(parent: CodeLayoutSplitNGridInternal | null = null) {
+    super(parent?.context);
+    this.parentGroup = parent;
     this.open = true;
   }
 
@@ -193,6 +203,20 @@ export class CodeLayoutSplitNPanelInternal extends CodeLayoutPanelInternal imple
       newGrid.notifyRelayout();
     });
   }
+
+  // Helper method to update data
+  updateData(key: string, value: any) {
+    this.data[key] = value;
+    // Trigger layout change if parent exists
+    if (this.parentGroup?.onLayoutChange) {
+      this.parentGroup.onLayoutChange();
+    }
+  }
+
+  // Helper method to get data
+  getData<T>(key: string, defaultValue?: T): T | undefined {
+    return this.data[key] as T ?? defaultValue;
+  }
 }
 /**
  * Grid type definition of SplitLayout.
@@ -263,7 +287,7 @@ export class CodeLayoutSplitNGridInternal extends CodeLayoutGridInternal impleme
     if (this.context.panelInstances.has(panelInternal.name))
       throw new Error(`A panel named ${panel.name} already exists in this layout`);
   
-    const panelResult = reactive(new CodeLayoutSplitNPanelInternal(this.context));
+    const panelResult = reactive(new CodeLayoutSplitNPanelInternal(this));
     Object.assign(panelResult, panel);
     panelResult.children = [];
     panelResult.size = panel.size ?? 0;
@@ -353,12 +377,25 @@ export class CodeLayoutSplitNGridInternal extends CodeLayoutGridInternal impleme
     return this.childGrid.includes(child);
   }
   
-  toJson() : any {
+  toJson() {
     return {
-      ...super.toJson(),
-      canMinClose: this.canMinClose,
+      name: this.name,
+      open: this.open,
+      size: this.size,
+      visible: this.visible,
       direction: this.direction,
-      childGrid: this.childGrid.map(p => p.toJson()),
+      children: this.children.map(child => ({
+        name: child.name,
+        title: child.title,
+        tooltip: child.tooltip,
+        badge: child.badge,
+        data: child.data,
+        // Don't serialize functions, just their existence
+        hasIconSmall: !!child.iconSmall,
+        hasIconLarge: !!child.iconLarge,
+        hasActions: Array.isArray(child.actions)
+      })),
+      childGrid: this.childGrid.map(grid => grid.toJson())
     }
   }
   loadFromJson(json: any): void {
