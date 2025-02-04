@@ -22,6 +22,7 @@ English | [中文](./README.CN.md)
 * Built-in state persistence with Pinia (optional)
 * Optional Supabase integration for cloud storage
 * Layout persistence with versioning (using Supabase)
+* First-class Nuxt 3 support with SSR-friendly state management
 
 ### TypeScript Support
 
@@ -40,18 +41,28 @@ declare module '@edanweis/vue-code-layout' {
 
 ### Install
 
-```npm install -save vue-code-layout
+```bash
+# For Vue.js
+npm install @edanweis/vue-code-layout
+
+# For Nuxt 3
+npm install @edanweis/vue-code-layout
 ```
 
-Import in main.ts:
-
+For Vue.js, import in main.ts:
 ```js
 import 'vue-code-layout/lib/vue-code-layout.css'
 import VueCodeLayout from '@edanweis/vue-code-layout'
 
 createApp(App)
-  .use(VueCodeLayout)  
+  .use(VueCodeLayout)
+```
 
+For Nuxt 3, add to nuxt.config.ts:
+```ts
+export default defineNuxtConfig({
+  modules: ['@edanweis/vue-code-layout/nuxt']
+})
 ```
 
 For detailed usage, please refer to the documentation.
@@ -65,6 +76,7 @@ For detailed usage, please refer to the documentation.
 - [Getting Started](docs/en/guide/start.md)
 - [Split Layout](docs/en/guide/split-layout.md)
 - [Layout Persistence](docs/en/guide/layout-persistence.md)
+- [Nuxt Integration](docs/en/guide/nuxt.md)
 - [Internationalization](docs/en/guide/i18n.md)
 
 ## Develop
