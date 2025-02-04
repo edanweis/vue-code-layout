@@ -1,12 +1,14 @@
 import { inject, ref, type App } from 'vue'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { useLayoutPersistence } from './useLayoutPersistence'
-import type { LayoutPersistenceState, LayoutPersistenceVersion } from './useLayoutPersistence'
+import type { LayoutPersistenceState, LayoutPersistenceVersion, UseLayoutPersistenceOptions } from './useLayoutPersistence'
 
 const LAYOUT_STORE_KEY = Symbol('layout-store')
 
+export interface LayoutStoreInitOptions extends Omit<UseLayoutPersistenceOptions, 'layoutInstance'> {}
+
 export interface LayoutStore {
-  initialize: (options: { supabase: SupabaseClient; stateId?: string }) => Promise<void>
+  initialize: (options: LayoutStoreInitOptions) => Promise<void>
   setLayoutInstance: (instance: any) => void
   currentState: ReturnType<typeof useLayoutPersistence>['currentState']
   versions: ReturnType<typeof useLayoutPersistence>['versions']
@@ -31,16 +33,14 @@ export function createLayoutStore() {
   }
 
   const store: LayoutStore = {
-    initialize: async ({ supabase, stateId }) => {
+    initialize: async (options) => {
       if (!layoutInstance.value) {
         throw new Error('[vue-code-layout] Layout instance not set. Call setLayoutInstance before initializing.')
       }
       
       persistenceInstance = useLayoutPersistence({
-        supabase,
-        stateId,
-        layoutInstance: layoutInstance.value,
-        autoSync: true
+        ...options,
+        layoutInstance: layoutInstance.value
       })
 
       // Copy all the methods and state from the persistence instance

@@ -9,6 +9,7 @@ export * from './Composeable/ResizeChecker';
 export * from './Composeable/MiniTimeout';
 export * from './Composeable/PanelMenu';
 export * from './Language/index';
+export * from './Composeable/createLayoutStore';
 
 import CodeLayout from './CodeLayout.vue'
 import CodeLayoutActionsRender from './CodeLayoutActionsRender.vue'
@@ -40,13 +41,11 @@ export {
 }
 
 export { useLayoutPersistence } from './Composeable/useLayoutPersistence'
-export { useLayoutStore } from './Composeable/createLayoutStore'
 export type { 
   LayoutPersistenceState, 
   LayoutPersistenceVersion, 
   UseLayoutPersistenceOptions 
 } from './Composeable/useLayoutPersistence'
-export type { LayoutStore } from './Composeable/createLayoutStore'
 
 // Create the layout store plugin
 export const layoutStore = createLayoutStore()

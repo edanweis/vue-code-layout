@@ -23,10 +23,24 @@ English | [中文](./README.CN.md)
 * Optional Supabase integration for cloud storage
 * Layout persistence with versioning (using Supabase)
 
+### TypeScript Support
+
+When using TypeScript with the layout store plugin, you may need to override some types. The library currently uses `@ts-nocheck` in some internal files for compatibility. If you encounter type errors with `initialize` or other methods, you can extend the types as needed:
+
+```typescript
+declare module '@edanweis/vue-code-layout' {
+  interface LayoutStoreOptions {
+    supabase?: any;
+    stateId?: string;
+    additionalData?: Record<string, any>;
+    // Add other options as needed
+  }
+}
+```
+
 ### Install
 
-```
-npm install -save vue-code-layout
+```npm install -save vue-code-layout
 ```
 
 Import in main.ts:
