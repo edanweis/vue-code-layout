@@ -5,7 +5,21 @@ import type { LayoutPersistenceState, LayoutPersistenceVersion, UseLayoutPersist
 
 const LAYOUT_STORE_KEY = Symbol('layout-store')
 
-export interface LayoutStoreInitOptions extends Omit<UseLayoutPersistenceOptions, 'layoutInstance'> {}
+export interface LayoutStoreEvents {
+  onBeforeSave?: () => void | Promise<void>
+  onAfterSave?: (state: LayoutPersistenceState) => void | Promise<void>
+  onBeforeLoad?: () => void | Promise<void>
+  onAfterLoad?: (state: LayoutPersistenceState) => void | Promise<void>
+  onBeforeCreateVersion?: () => void | Promise<void>
+  onAfterCreateVersion?: (version: LayoutPersistenceVersion) => void | Promise<void>
+  onBeforeLoadVersion?: (version: LayoutPersistenceVersion) => void | Promise<void>
+  onAfterLoadVersion?: (version: LayoutPersistenceVersion) => void | Promise<void>
+  onError?: (error: any) => void | Promise<void>
+}
+
+export interface LayoutStoreInitOptions extends Omit<UseLayoutPersistenceOptions, 'layoutInstance'> {
+  events?: LayoutStoreEvents
+}
 
 export interface LayoutStore {
   initialize: (options: LayoutStoreInitOptions) => Promise<void>
@@ -25,6 +39,7 @@ export function createLayoutStore() {
   let persistenceInstance: ReturnType<typeof useLayoutPersistence> | null = null
   const layoutInstance = ref<any>(null)
   const isInitialized = ref(false)
+  let events: LayoutStoreEvents = {}
 
   const throwIfNotInitialized = () => {
     if (!isInitialized.value) {
@@ -37,10 +52,17 @@ export function createLayoutStore() {
       if (!layoutInstance.value) {
         throw new Error('[vue-code-layout] Layout instance not set. Call setLayoutInstance before initializing.')
       }
+
+      // Store events for later use
+      events = options.events || {}
       
       persistenceInstance = useLayoutPersistence({
         ...options,
-        layoutInstance: layoutInstance.value
+        layoutInstance: layoutInstance.value,
+        onError: async (error) => {
+          options.onError?.(error)
+          await events.onError?.(error)
+        }
       })
 
       // Copy all the methods and state from the persistence instance
@@ -48,10 +70,38 @@ export function createLayoutStore() {
       store.versions = persistenceInstance.versions
       store.isLoading = persistenceInstance.isLoading
       store.error = persistenceInstance.error
-      store.loadState = persistenceInstance.loadState
-      store.saveState = persistenceInstance.saveState
-      store.createVersion = persistenceInstance.createVersion
-      store.loadVersion = persistenceInstance.loadVersion
+      
+      // Wrap methods with events
+      store.loadState = async () => {
+        await events.onBeforeLoad?.()
+        await persistenceInstance!.loadState()
+        if (store.currentState.value) {
+          await events.onAfterLoad?.(store.currentState.value)
+        }
+      }
+
+      store.saveState = async () => {
+        await events.onBeforeSave?.()
+        const result = await persistenceInstance!.saveState()
+        await events.onAfterSave?.(result)
+        return result
+      }
+
+      store.createVersion = async (versionName: string) => {
+        await events.onBeforeCreateVersion?.()
+        await persistenceInstance!.createVersion(versionName)
+        const latestVersion = persistenceInstance!.versions.value[0]
+        if (latestVersion) {
+          await events.onAfterCreateVersion?.(latestVersion)
+        }
+      }
+
+      store.loadVersion = async (version: LayoutPersistenceVersion) => {
+        await events.onBeforeLoadVersion?.(version)
+        await persistenceInstance!.loadVersion(version)
+        await events.onAfterLoadVersion?.(version)
+      }
+
       store.fetchVersions = persistenceInstance.fetchVersions
 
       isInitialized.value = true

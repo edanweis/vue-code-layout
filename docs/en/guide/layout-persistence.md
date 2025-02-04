@@ -266,4 +266,204 @@ interface UseLayoutPersistenceOptions {
   additionalData?: Record<string, any> | (() => Record<string, any>) // Additional data to include when saving states
   additionalVersionData?: Record<string, any> | (() => Record<string, any>) // Additional data to include when saving versions
 }
-``` 
+```
+
+## Events
+
+When using the layout store plugin, you can define event handlers that will be called before and after various operations. This allows you to perform custom actions at specific points in the layout persistence lifecycle.
+
+### Available Events
+
+```typescript
+interface LayoutStoreEvents {
+  // Called before saving the layout state
+  onBeforeSave?: () => void | Promise<void>
+  // Called after successfully saving the layout state
+  onAfterSave?: (state: LayoutPersistenceState) => void | Promise<void>
+  // Called before loading a layout state
+  onBeforeLoad?: () => void | Promise<void>
+  // Called after successfully loading a layout state
+  onAfterLoad?: (state: LayoutPersistenceState) => void | Promise<void>
+  // Called before creating a new version
+  onBeforeCreateVersion?: () => void | Promise<void>
+  // Called after successfully creating a new version
+  onAfterCreateVersion?: (version: LayoutPersistenceVersion) => void | Promise<void>
+  // Called before loading a version
+  onBeforeLoadVersion?: (version: LayoutPersistenceVersion) => void | Promise<void>
+  // Called after successfully loading a version
+  onAfterLoadVersion?: (version: LayoutPersistenceVersion) => void | Promise<void>
+  // Called when an error occurs in any operation
+  onError?: (error: any) => void | Promise<void>
+}
+```
+
+### Example Usage
+
+```typescript
+import { createLayoutStore } from '@edanweis/vue-code-layout'
+import { supabase } from './supabase-client'
+
+const layoutStore = createLayoutStore()
+
+// Initialize with events
+await layoutStore.initialize({
+  supabase,
+  stateId: 'my-layout',
+  events: {
+    onBeforeSave: () => {
+      console.log('About to save layout state...')
+    },
+    onAfterSave: (state) => {
+      console.log('Layout state saved:', state)
+      // You could show a notification here
+    },
+    onBeforeLoad: () => {
+      console.log('About to load layout state...')
+      // You could show a loading indicator
+    },
+    onAfterLoad: (state) => {
+      console.log('Layout state loaded:', state)
+      // You could hide the loading indicator
+    },
+    onBeforeCreateVersion: () => {
+      console.log('Creating new version...')
+    },
+    onAfterCreateVersion: (version) => {
+      console.log('New version created:', version)
+      // You could show a success message
+    },
+    onError: (error) => {
+      console.error('Layout operation failed:', error)
+      // You could show an error notification
+    }
+  }
+})
+```
+
+### Best Practices for Events
+
+1. **Error Handling**:
+   - Always implement the `onError` event handler to handle and display errors appropriately
+   - Use try-catch blocks in your event handlers if performing complex operations
+
+2. **Async Operations**:
+   - All event handlers can be asynchronous (return a Promise)
+   - Use async/await for cleaner code when performing async operations
+   - Be careful not to block the UI thread with long-running operations
+
+3. **State Management**:
+   - Use events to sync layout state with other parts of your application
+   - Consider integrating with your application's notification system
+   - Update loading states and UI feedback in event handlers
+
+4. **Performance**:
+   - Keep event handlers light and fast
+   - Move heavy computations to web workers if necessary
+   - Consider debouncing or throttling if events are triggered frequently
+
+### Example with Loading States
+
+```vue
+<template>
+  <div class="layout-container">
+    <div v-if="isLoading" class="loading-overlay">
+      Loading layout...
+    </div>
+    
+    <SplitLayout ref="layoutRef" />
+    
+    <div class="notifications">
+      <div v-if="notification" :class="notification.type">
+        {{ notification.message }}
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue'
+import { useLayoutStore } from '@edanweis/vue-code-layout'
+
+const layoutRef = ref()
+const isLoading = ref(false)
+const notification = ref<{ type: string; message: string } | null>(null)
+
+const showNotification = (message: string, type: string = 'info') => {
+  notification.value = { message, type }
+  setTimeout(() => {
+    notification.value = null
+  }, 3000)
+}
+
+const store = useLayoutStore()
+
+// Set up layout instance
+store.setLayoutInstance(layoutRef)
+
+// Initialize with events
+await store.initialize({
+  supabase,
+  events: {
+    onBeforeLoad: () => {
+      isLoading.value = true
+    },
+    onAfterLoad: () => {
+      isLoading.value = false
+      showNotification('Layout loaded successfully', 'success')
+    },
+    onBeforeSave: () => {
+      showNotification('Saving layout...', 'info')
+    },
+    onAfterSave: () => {
+      showNotification('Layout saved successfully', 'success')
+    },
+    onError: (error) => {
+      isLoading.value = false
+      showNotification(error.message, 'error')
+    }
+  }
+})
+</script>
+
+<style scoped>
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.notifications {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+.notifications > div {
+  padding: 10px 20px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.info {
+  background: #2196f3;
+  color: white;
+}
+
+.success {
+  background: #4caf50;
+  color: white;
+}
+
+.error {
+  background: #f44336;
+  color: white;
+}
+</style> 
