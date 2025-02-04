@@ -771,6 +771,5 @@ function saveLayoutAtUnmount() {
 </script>
 
 <style lang="scss">
-@import './Scss/Base.scss';
-@import './Scss/Menu.scss';
+@use './Scss/index.scss';
 </style>
