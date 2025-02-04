@@ -1,4 +1,4 @@
-import { defineNuxtModule, addPlugin, createResolver } from '@nuxt/kit'
+import { defineNuxtModule, addPlugin, createResolver, addImports } from '@nuxt/kit'
 import { name, version } from '../package.json'
 
 export interface ModuleOptions {
@@ -25,7 +25,24 @@ export default defineNuxtModule<ModuleOptions>({
     const resolver = createResolver(import.meta.url)
 
     // Add plugin
-    addPlugin(resolver.resolve('./runtime/plugin'))
+    addPlugin({
+      src: resolver.resolve('./runtime/plugin'),
+      mode: 'client'
+    })
+
+    // Add composables
+    addImports([
+      {
+        name: 'useNuxtLayout',
+        as: 'useNuxtLayout',
+        from: resolver.resolve('./runtime/composables')
+      },
+      {
+        name: 'saveNuxtLayout',
+        as: 'saveNuxtLayout',
+        from: resolver.resolve('./runtime/composables')
+      }
+    ])
 
     // Add components
     nuxt.hook('components:dirs', (dirs) => {
@@ -33,11 +50,6 @@ export default defineNuxtModule<ModuleOptions>({
         path: resolver.resolve('../library'),
         prefix: ''
       })
-    })
-
-    // Add composables
-    nuxt.hook('imports:dirs', (dirs) => {
-      dirs.push(resolver.resolve('./runtime/composables'))
     })
 
     // Add CSS

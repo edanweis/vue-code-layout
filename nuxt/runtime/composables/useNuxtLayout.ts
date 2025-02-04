@@ -1,5 +1,3 @@
-import { useAsyncData, useRuntimeConfig } from '#app'
-import { useLayoutStore } from '#imports'
 import type { LayoutState } from '../../../library/types'
 import type { ModuleOptions } from '../../module'
 
@@ -11,31 +9,28 @@ export interface UseNuxtLayoutOptions extends Partial<ModuleOptions> {
   immediate?: boolean
 }
 
-interface VueCodeLayoutConfig {
-  defaultStateId?: string
-  [key: string]: any
-}
-
 /**
  * Composable for managing layout state in Nuxt applications
  */
 export function useNuxtLayout(options: UseNuxtLayoutOptions = {}) {
+  // These will be auto-imported by Nuxt
+  const { useAsyncData } = useNuxtApp()
   const config = useRuntimeConfig()
   const layoutStore = useLayoutStore()
   
   // Get stateId from options or module defaults
-  const vueCodeLayout = (config.public?.vueCodeLayout || {}) as VueCodeLayoutConfig
+  const vueCodeLayout = (config.public?.vueCodeLayout || {}) as ModuleOptions
   const stateId = options.defaultStateId || 
     vueCodeLayout.defaultStateId || 
     'default'
 
-  return useAsyncData<LayoutState>(
+  return useAsyncData(
     `layout-${stateId}`,
     async () => {
       await layoutStore.initialize({
         stateId
       })
-      return layoutStore.state
+      return layoutStore.state as LayoutState
     },
     {
       immediate: options.immediate ?? true
@@ -50,7 +45,7 @@ export async function saveNuxtLayout(state: LayoutState, options: UseNuxtLayoutO
   const config = useRuntimeConfig()
   const layoutStore = useLayoutStore()
   
-  const vueCodeLayout = (config.public?.vueCodeLayout || {}) as VueCodeLayoutConfig
+  const vueCodeLayout = (config.public?.vueCodeLayout || {}) as ModuleOptions
   const stateId = options.defaultStateId || 
     vueCodeLayout.defaultStateId || 
     'default'

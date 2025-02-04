@@ -9,9 +9,11 @@
     "noEmit": false,
     "allowJs": true,
     "types": ["@nuxt/types", "@types/node"],
+    "baseUrl": ".",
     "paths": {
-      "#app": ["./nuxt/types.d.ts"],
-      "#imports": ["./nuxt/types.d.ts"]
+      "#app": ["./nuxt/runtime/types.d.ts"],
+      "#imports": ["./nuxt/runtime/types.d.ts"],
+      "@/*": ["./*"]
     },
     "outDir": "lib/nuxt",
     "declaration": true,
@@ -19,8 +21,8 @@
   },
   "include": [
     "nuxt/**/*",
-    "nuxt/types.d.ts",
-    "nuxt/shims-vue.d.ts"
+    "library/**/*",
+    "nuxt/runtime/types.d.ts"
   ],
   "exclude": [
     "node_modules",
