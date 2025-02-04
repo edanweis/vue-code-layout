@@ -19,7 +19,10 @@
       "types": "./lib/composables/index.d.ts",
       "import": "./lib/composables/index.mjs"
     },
-    "./style.css": "./lib/vue-code-layout.css"
+    "./style.css": "./lib/vue-code-layout.css",
+    "./runtime/plugin": {
+      "import": "./lib/nuxt/runtime/plugin.js"
+    }
   },
   "files": [
     "lib",
