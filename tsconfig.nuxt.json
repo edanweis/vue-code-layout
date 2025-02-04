@@ -1,0 +1,29 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": false,
+    "skipLibCheck": true,
+    "noEmit": false,
+    "allowJs": true,
+    "types": ["@nuxt/types", "@types/node"],
+    "paths": {
+      "#app": ["./nuxt/types.d.ts"],
+      "#imports": ["./nuxt/types.d.ts"]
+    },
+    "outDir": "lib/nuxt",
+    "declaration": true,
+    "declarationDir": "lib/nuxt"
+  },
+  "include": [
+    "nuxt/**/*",
+    "nuxt/types.d.ts",
+    "nuxt/shims-vue.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "lib"
+  ]
+} 

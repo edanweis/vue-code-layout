@@ -3,23 +3,24 @@
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "Node",
-    "strict": false,
     "skipLibCheck": true,
-    "jsx": "preserve",
+    "strict": false,
     "allowJs": true,
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
+    "jsx": "preserve",
     "lib": ["ESNext", "DOM"],
     "types": ["node"],
-    "outDir": "../lib",
-    "declaration": true,
-    "declarationDir": "../lib"
+    "baseUrl": ".",
+    "paths": {
+      "#app": ["./node_modules/nuxt/dist/app"],
+      "#imports": ["./node_modules/nuxt/dist/app/composables"]
+    }
   },
-  "include": [
-    "./**/*"
-  ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "lib",
+    "dist"
   ]
-}
+} 

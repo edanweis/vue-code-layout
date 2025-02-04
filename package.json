@@ -1,6 +1,6 @@
 {
   "name": "@edanweis/vue-code-layout",
-  "version": "1.4.0-beta.1",
+  "version": "1.4.0-beta.2",
   "description": "A Vue editor layout component with built-in persistence",
   "main": "lib/vue-code-layout.umd.js",
   "module": "lib/vue-code-layout.es.js",
@@ -12,24 +12,22 @@
       "require": "./lib/vue-code-layout.umd.js"
     },
     "./nuxt": {
-      "types": "./lib/nuxt/index.d.ts",
-      "import": "./lib/nuxt/module.mjs"
+      "import": "./nuxt/module.ts"
     },
     "./style.css": "./lib/vue-code-layout.css"
   },
-  "nuxt": {
-    "module": "lib/nuxt/module.mjs"
-  },
   "files": [
     "lib",
+    "nuxt",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc --noEmit && vite build",
-    "build-lib": "vue-tsc --noEmit && vite build library",
-    "build-demo": "vue-tsc --noEmit && vite build",
+    "build": "vite build",
+    "build-lib": "vite build library",
+    "build-demo": "vite build",
+    "build-nuxt": "tsc -p tsconfig.nuxt.json --noEmit false --skipLibCheck true --noErrorTruncation false",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -38,17 +36,33 @@
     "vue": "^3.3.11"
   },
   "peerDependencies": {
+    "@nuxt/kit": "^3.0.0",
+    "nuxt": "^3.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@nuxt/kit": {
+      "optional": true
+    },
     "nuxt": {
       "optional": true
     }
   },
   "devDependencies": {
-    "@nuxt/kit": "^3.9.0",
+    "@imengyu/vue3-context-menu": "^1.4.4",
+    "@nuxt/kit": "^3.15.4",
+    "@nuxt/schema": "^3.15.4",
+    "@nuxt/types": "^2.18.1",
+    "@supabase/supabase-js": "^2.48.1",
     "@types/node": "^20.10.4",
+    "@types/vue": "^1.0.31",
     "@vitejs/plugin-vue": "^4.5.2",
+    "@vitejs/plugin-vue-jsx": "^4.1.1",
+    "@vue/runtime-core": "^3.5.13",
+    "@vue/runtime-dom": "^3.5.13",
     "sass": "^1.69.5",
     "typescript": "^5.3.3",
     "vite": "^5.0.7",
+    "vite-plugin-dts": "^4.5.0",
     "vue-tsc": "^1.8.25"
   },
   "repository": {

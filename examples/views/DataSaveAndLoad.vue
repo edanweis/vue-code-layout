@@ -102,7 +102,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, onUnmounted } from 'vue';
 import SplitLayout from '../../library/SplitLayout/SplitLayout.vue'
 import SplitTabItem from '../../library/SplitLayout/SplitTabItem.vue'
 import { useLayoutPersistence } from '../../library/Composeable/useLayoutPersistence'
@@ -229,8 +229,52 @@ watch([() => auth.isLoggedIn.value, () => splitLayoutRef.value], async ([isLogge
         autoSync: true,
         onError: (error) => {
           console.error('❌ Layout state error:', error)
+        },
+        // Add event handlers
+        events: {
+          onBeforeSave: async (state) => {
+            console.log('🔄 Before saving layout state:', state)
+            // You can modify the state or perform validations here
+          },
+          onAfterSave: async (state) => {
+            console.log('✅ Layout state saved:', state)
+            // You can trigger UI updates or notifications here
+          },
+          onBeforeLoad: async (state) => {
+            console.log('🔄 Before loading layout state:', state)
+            // You can prepare the UI or show loading indicators
+          },
+          onAfterLoad: async (state) => {
+            console.log('✅ Layout state loaded:', state)
+            // You can perform post-load operations or UI updates
+          },
+          onBeforeVersionCreate: async (versionName) => {
+            console.log('🔄 Creating version:', versionName)
+            // You can validate version names or show UI feedback
+          },
+          onAfterVersionCreate: async (version) => {
+            console.log('✅ Version created:', version)
+            // You can update UI or trigger notifications
+          },
+          onError: async (error) => {
+            console.error('❌ Layout operation error:', error)
+            // You can show error notifications or handle specific error types
+          }
         }
       });
+
+      // Example of dynamically adding/removing event handlers
+      const handleStateChange = async (state: LayoutPersistenceState) => {
+        console.log('Layout state changed:', state)
+      }
+
+      // Add dynamic event handler
+      layoutState.on('onAfterSave', handleStateChange)
+
+      // Remove it when component is unmounted
+      onUnmounted(() => {
+        layoutState?.off('onAfterSave')
+      })
 
       // Load initial state
       console.log('🔄 Loading initial state...')

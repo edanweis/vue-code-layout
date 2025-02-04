@@ -24,22 +24,7 @@ English | [中文](./README.CN.md)
 * Layout persistence with versioning (using Supabase)
 * First-class Nuxt 3 support with SSR-friendly state management
 
-### TypeScript Support
-
-When using TypeScript with the layout store plugin, you may need to override some types. The library currently uses `@ts-nocheck` in some internal files for compatibility. If you encounter type errors with `initialize` or other methods, you can extend the types as needed:
-
-```typescript
-declare module '@edanweis/vue-code-layout' {
-  interface LayoutStoreOptions {
-    supabase?: any;
-    stateId?: string;
-    additionalData?: Record<string, any>;
-    // Add other options as needed
-  }
-}
-```
-
-### Install
+## Installation
 
 ```bash
 # For Vue.js
@@ -49,60 +34,169 @@ npm install @edanweis/vue-code-layout
 npm install @edanweis/vue-code-layout
 ```
 
-For Vue.js, import in main.ts:
-```js
-import 'vue-code-layout/lib/vue-code-layout.css'
-import VueCodeLayout from '@edanweis/vue-code-layout'
+## Usage
 
-createApp(App)
-  .use(VueCodeLayout)
+### Vue.js Setup
+
+```js
+// main.ts or main.js
+import { createApp } from 'vue'
+import { createPinia } from 'pinia'
+import VueCodeLayout from '@edanweis/vue-code-layout'
+import '@edanweis/vue-code-layout/style.css'
+
+const app = createApp(App)
+app.use(createPinia()) // Required for state persistence
+app.use(VueCodeLayout)
+app.mount('#app')
 ```
 
-For Nuxt 3, add to nuxt.config.ts:
+### Nuxt 3 Setup
+
 ```ts
+// nuxt.config.ts
 export default defineNuxtConfig({
-  modules: ['@edanweis/vue-code-layout/nuxt']
+  modules: ['@edanweis/vue-code-layout/nuxt'],
+  vueCodeLayout: {
+    defaultStateId: 'default' // Optional: Set a default state ID
+  }
 })
 ```
 
-For detailed usage, please refer to the documentation.
+### Basic Usage
 
-## Documentation
+```vue
+<template>
+  <code-layout
+    v-model="layoutState"
+    @change="handleLayoutChange"
+  >
+    <template #left>
+      <!-- Left panel content -->
+    </template>
+    <template #right>
+      <!-- Right panel content -->
+    </template>
+    <template #bottom>
+      <!-- Bottom panel content -->
+    </template>
+  </code-layout>
+</template>
 
-[Documentation](https://docs.imengyu.top/vue-code-layout-docs/)
+<script setup lang="ts">
+import { ref } from 'vue'
+import type { LayoutState } from '@edanweis/vue-code-layout'
 
-[Demo](https://docs.imengyu.top/vue-code-layout-demo/)
+const layoutState = ref<LayoutState>({
+  panels: {
+    left: { size: 200 },
+    right: { size: 300 },
+    bottom: { size: 200 }
+  }
+})
 
-- [Getting Started](docs/en/guide/start.md)
-- [Split Layout](docs/en/guide/split-layout.md)
-- [Layout Persistence](docs/en/guide/layout-persistence.md)
-- [Nuxt Integration](docs/en/guide/nuxt.md)
-- [Internationalization](docs/en/guide/i18n.md)
-
-## Develop
-
-```shell
-git clone git@github.com:edanweis/vue-code-layout.git
-cd vue-code-layout
-npm install
-npm run dev        # Development serve project
-npm run build-demo # Build example project
-npm run build-lib  # Build library project
+const handleLayoutChange = (newState: LayoutState) => {
+  // Handle layout changes
+  console.log('Layout changed:', newState)
+}
+</script>
 ```
 
-## Problem
+### Using with Nuxt 3
 
-Open source projects require everyone's support to get better and better.
+The Nuxt module provides automatic component registration and composables for managing layout state:
 
-If you encounter any problems, you can submit an issue and I will do my best to solve it for you.
+```vue
+<script setup lang="ts">
+// Use the built-in composable for state management
+const { data: layoutState } = useNuxtLayout({
+  defaultStateId: 'my-layout', // Optional: Unique ID for this layout instance
+  immediate: true // Optional: Load state immediately (default: true)
+})
 
-If you have any good modifications, welecome submit a PR!
+// Save layout state when needed
+const handleLayoutChange = async (newState) => {
+  await saveNuxtLayout(newState)
+}
+</script>
 
-## AD: Author's other project
+<template>
+  <code-layout
+    v-if="layoutState"
+    v-model="layoutState"
+    @change="handleLayoutChange"
+  >
+    <!-- Your layout content -->
+  </code-layout>
+</template>
+```
 
-* [vue3-context-menu](https://github.com/imengyu/vue3-context-menu)
-* [vue-dock-layout](https://github.com/imengyu/vue-dock-layout)
-* [vue-dynamic-form A data driven form component for vue3](https://github.com/imengyu/vue-dynamic-form)
+### Supabase Integration (Optional)
+
+To enable cloud storage with Supabase:
+
+```ts
+// Initialize with Supabase client
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
+
+// Vue.js
+app.use(VueCodeLayout, {
+  supabase,
+  defaultStateId: 'my-layout'
+})
+
+// Nuxt 3
+export default defineNuxtConfig({
+  modules: ['@edanweis/vue-code-layout/nuxt'],
+  vueCodeLayout: {
+    supabase: {
+      url: process.env.SUPABASE_URL,
+      key: process.env.SUPABASE_KEY
+    },
+    defaultStateId: 'my-layout'
+  }
+})
+```
+
+### TypeScript Support
+
+When using TypeScript, you can extend the types:
+
+```typescript
+declare module '@edanweis/vue-code-layout' {
+  interface LayoutStoreOptions {
+    supabase?: any;
+    stateId?: string;
+    additionalData?: Record<string, any>;
+  }
+}
+```
+
+## API Reference
+
+### Props
+
+| Name | Type | Default | Description |
+|------|------|---------|-------------|
+| v-model | `LayoutState` | `{}` | Layout state object |
+| defaultStateId | `string` | `'default'` | Unique identifier for the layout state |
+| immediate | `boolean` | `true` | Whether to load state immediately |
+
+### Events
+
+| Name | Parameters | Description |
+|------|------------|-------------|
+| change | `(state: LayoutState)` | Emitted when layout changes |
+| initialized | `(state: LayoutState)` | Emitted when layout is initialized |
+
+### Slots
+
+| Name | Description |
+|------|-------------|
+| left | Left panel content |
+| right | Right panel content |
+| bottom | Bottom panel content |
+| default | Main content area |
 
 ## License
 

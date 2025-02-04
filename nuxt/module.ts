@@ -1,15 +1,12 @@
-import { defineNuxtModule, addImportsDir, createResolver, addPlugin } from '@nuxt/kit'
+import { defineNuxtModule, addPlugin, createResolver } from '@nuxt/kit'
 import { name, version } from '../package.json'
 
 export interface ModuleOptions {
   /**
    * Default stateId to use for layout persistence
+   * @default 'default'
    */
   defaultStateId?: string
-  /**
-   * Enable auto-imports of composables
-   */
-  autoImports?: boolean
 }
 
 export default defineNuxtModule<ModuleOptions>({
@@ -22,34 +19,31 @@ export default defineNuxtModule<ModuleOptions>({
     }
   },
   defaults: {
-    defaultStateId: 'default',
-    autoImports: true
+    defaultStateId: 'default'
   },
   setup(options, nuxt) {
     const resolver = createResolver(import.meta.url)
 
-    // Add composables auto-imports
-    if (options.autoImports) {
-      addImportsDir(resolver.resolve('./runtime/composables'))
-    }
-
-    // Add plugin for Vue plugin registration
+    // Add plugin
     addPlugin(resolver.resolve('./runtime/plugin'))
 
-    // Inject module options
-    nuxt.options.runtimeConfig.public.vueCodeLayout = options
-
-    // Add types
-    nuxt.hook('prepare:types', ({ references }) => {
-      references.push({ types: '@edanweis/vue-code-layout/nuxt' })
+    // Add components
+    nuxt.hook('components:dirs', (dirs) => {
+      dirs.push({
+        path: resolver.resolve('../library'),
+        prefix: ''
+      })
     })
-  }
-})
 
-declare module '@nuxt/schema' {
-  interface ConfigSchema {
-    publicRuntimeConfig?: {
-      vueCodeLayout?: ModuleOptions
-    }
+    // Add composables
+    nuxt.hook('imports:dirs', (dirs) => {
+      dirs.push(resolver.resolve('./runtime/composables'))
+    })
+
+    // Add CSS
+    nuxt.options.css.push('@edanweis/vue-code-layout/style.css')
+
+    // Make options available in runtime config
+    nuxt.options.runtimeConfig.public.vueCodeLayout = options
   }
-} 
+}) 

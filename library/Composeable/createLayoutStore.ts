@@ -5,7 +5,19 @@ import type { LayoutPersistenceState, LayoutPersistenceVersion, UseLayoutPersist
 
 const LAYOUT_STORE_KEY = Symbol('layout-store')
 
-export interface LayoutStoreInitOptions extends Omit<UseLayoutPersistenceOptions, 'layoutInstance'> {}
+export interface LayoutStoreEvents {
+  onBeforeSave?: (state: LayoutPersistenceState) => void | Promise<void>
+  onAfterSave?: (state: LayoutPersistenceState) => void | Promise<void>
+  onBeforeLoad?: (state: LayoutPersistenceState) => void | Promise<void>
+  onAfterLoad?: (state: LayoutPersistenceState) => void | Promise<void>
+  onBeforeVersionCreate?: (versionName: string) => void | Promise<void>
+  onAfterVersionCreate?: (version: LayoutPersistenceVersion) => void | Promise<void>
+  onError?: (error: any) => void
+}
+
+export interface LayoutStoreInitOptions extends Omit<UseLayoutPersistenceOptions, 'layoutInstance'> {
+  events?: LayoutStoreEvents
+}
 
 export interface LayoutStore {
   initialize: (options: LayoutStoreInitOptions) => Promise<void>
@@ -19,12 +31,16 @@ export interface LayoutStore {
   createVersion: ReturnType<typeof useLayoutPersistence>['createVersion']
   loadVersion: ReturnType<typeof useLayoutPersistence>['loadVersion']
   fetchVersions: ReturnType<typeof useLayoutPersistence>['fetchVersions']
+  // Event handlers
+  on: (event: keyof LayoutStoreEvents, handler: Function) => void
+  off: (event: keyof LayoutStoreEvents) => void
 }
 
 export function createLayoutStore() {
   let persistenceInstance: ReturnType<typeof useLayoutPersistence> | null = null
   const layoutInstance = ref<any>(null)
   const isInitialized = ref(false)
+  const eventHandlers = new Map<keyof LayoutStoreEvents, Function>()
 
   const throwIfNotInitialized = () => {
     if (!isInitialized.value) {
@@ -37,20 +53,79 @@ export function createLayoutStore() {
       if (!layoutInstance.value) {
         throw new Error('[vue-code-layout] Layout instance not set. Call setLayoutInstance before initializing.')
       }
+
+      // Set up event handlers from options
+      if (options.events) {
+        Object.entries(options.events).forEach(([event, handler]) => {
+          eventHandlers.set(event as keyof LayoutStoreEvents, handler)
+        })
+      }
       
       persistenceInstance = useLayoutPersistence({
         ...options,
-        layoutInstance: layoutInstance.value
+        layoutInstance: layoutInstance.value,
+        onError: async (error) => {
+          options.onError?.(error)
+          await eventHandlers.get('onError')?.(error)
+        }
       })
+
+      // Wrap persistence methods with event handlers
+      const wrapWithEvents = async <T>(
+        action: () => Promise<T>,
+        beforeEvent?: keyof LayoutStoreEvents,
+        afterEvent?: keyof LayoutStoreEvents,
+        eventData?: any
+      ): Promise<T> => {
+        try {
+          if (beforeEvent) {
+            await eventHandlers.get(beforeEvent)?.(eventData)
+          }
+          const result = await action()
+          if (afterEvent) {
+            await eventHandlers.get(afterEvent)?.(result || eventData)
+          }
+          return result
+        } catch (error) {
+          await eventHandlers.get('onError')?.(error)
+          throw error
+        }
+      }
 
       // Copy all the methods and state from the persistence instance
       store.currentState = persistenceInstance.currentState
       store.versions = persistenceInstance.versions
       store.isLoading = persistenceInstance.isLoading
       store.error = persistenceInstance.error
-      store.loadState = persistenceInstance.loadState
-      store.saveState = persistenceInstance.saveState
-      store.createVersion = persistenceInstance.createVersion
+      
+      // Wrap methods with event handlers
+      store.loadState = async () => {
+        return wrapWithEvents(
+          () => persistenceInstance!.loadState(),
+          'onBeforeLoad',
+          'onAfterLoad',
+          store.currentState.value
+        )
+      }
+      
+      store.saveState = async () => {
+        return wrapWithEvents(
+          () => persistenceInstance!.saveState(),
+          'onBeforeSave',
+          'onAfterSave',
+          store.currentState.value
+        )
+      }
+      
+      store.createVersion = async (versionName: string) => {
+        return wrapWithEvents(
+          () => persistenceInstance!.createVersion(versionName),
+          'onBeforeVersionCreate',
+          'onAfterVersionCreate',
+          versionName
+        )
+      }
+      
       store.loadVersion = persistenceInstance.loadVersion
       store.fetchVersions = persistenceInstance.fetchVersions
 
@@ -65,6 +140,15 @@ export function createLayoutStore() {
         throw new Error('[vue-code-layout] Cannot set layout instance after initialization.')
       }
       layoutInstance.value = instance
+    },
+
+    // Event handling methods
+    on: (event: keyof LayoutStoreEvents, handler: Function) => {
+      eventHandlers.set(event, handler)
+    },
+
+    off: (event: keyof LayoutStoreEvents) => {
+      eventHandlers.delete(event)
     },
 
     // Initialize with empty refs and no-op functions that throw
