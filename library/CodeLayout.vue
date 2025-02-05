@@ -188,8 +188,9 @@ const hosterContext : CodeLayoutPanelHosterContext = {
   panelInstances,
   removePanelInternal,
   childGridActiveChildChanged() {},
-  closePanelInternal() {}
-}
+  closePanelInternal() {},
+  layoutConfig: props.layoutConfig
+};
 
 const panels = ref({
   primary: new CodeLayoutGridInternal('primarySideBar', 'hidden', hosterContext, 
@@ -771,6 +772,6 @@ function saveLayoutAtUnmount() {
 </script>
 
 <style lang="scss">
-@import './Scss/Base.scss';
-@import './Scss/Menu.scss';
+@use './Scss/Base';
+@use './Scss/Menu';
 </style>

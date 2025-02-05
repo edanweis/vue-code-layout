@@ -1,6 +1,7 @@
 import { reactive, type VNode } from "vue";
 import { LateClass } from "./Composeable/LateClass";
 import type { CodeLayoutLangDefine } from "./Language";
+import { CodeLayoutInitialPanelConfig } from './Types';
 // import '@imengyu/vue3-context-menu/lib/vue3-context-menu.css'
 
 /**
@@ -174,6 +175,11 @@ export interface CodeLayoutConfig {
    * @param referencePosition Drop source position.
    */
   onNonPanelDrop?: (e: DragEvent, sourcePosition: CodeLayoutDragDropReferenceAreaType, reference: CodeLayoutPanelInternal|undefined, referencePosition: CodeLayoutDragDropReferencePosition|undefined) => void;
+
+  /**
+   * Initial panel configuration
+   */
+  initialPanelConfig?: CodeLayoutInitialPanelConfig;
 }
 /**
  * Language Layout Definition
@@ -293,9 +299,10 @@ export interface CodeLayoutInstance {
 
 export interface CodeLayoutPanelHosterContext {
   panelInstances: Map<string, CodeLayoutPanelInternal>;
-  childGridActiveChildChanged(panel: CodeLayoutPanelInternal): void,
-  removePanelInternal(panel: CodeLayoutPanelInternal): undefined|CodeLayoutPanelInternal;
-  closePanelInternal(panel: CodeLayoutPanelInternal): void;
+  removePanelInternal: (panel: CodeLayoutPanelInternal) => void;
+  childGridActiveChildChanged: (grid: CodeLayoutGridInternal) => void;
+  closePanelInternal: (panel: CodeLayoutPanelInternal) => void;
+  layoutConfig?: CodeLayoutConfig;
 }
 
 export class CodeLayoutPanelInternal extends LateClass implements CodeLayoutPanel {

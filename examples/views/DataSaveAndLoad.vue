@@ -30,6 +30,13 @@
 
       <button @click="onResetAll" class="action-button">Reset Layout</button>
       <button @click="showData = !showData" class="action-button">{{ showData ? 'Hide' : 'Show' }} Debug</button>
+      <button 
+        @click="debug = !debug" 
+        class="action-button debug-toggle" 
+        :class="{ active: debug }"
+      >
+        {{ debug ? '🔊 Debug On' : '🔇 Debug Off' }}
+      </button>
     </div>
 
     <SplitLayout
@@ -109,12 +116,14 @@ import { useLayoutPersistence } from '../../library/Composeable/useLayoutPersist
 import { supabase } from '../config/supabase'
 import { useAuthProvider } from '../providers/AuthProvider'
 import type { LayoutPersistenceState, LayoutPersistenceVersion } from '../../library/Composeable/useLayoutPersistence'
-import { type CodeLayoutSplitNGridInternal, type CodeLayoutSplitNPanelInternal, defaultSplitLayoutConfig } from '../../library/SplitLayout/SplitN'
+import { CodeLayoutSplitNPanelInternal, type CodeLayoutSplitNGridInternal, defaultSplitLayoutConfig } from '../../library/SplitLayout/SplitN'
+import type { CodeLayoutPanelData } from '../../library/SplitLayout/SplitN'
 
 const splitLayoutRef = ref();
-const versions = ref<LayoutPersistenceVersion[]>([]);
+const versions = ref<ReturnType<typeof useLayoutPersistence>['versions']['value']>([]);
 const selectedVersion = ref<LayoutPersistenceVersion | null>(null);
 let layoutState: ReturnType<typeof useLayoutPersistence>;
+const debug = ref(false);
 
 // Panel state
 const showData = ref(false);
@@ -160,11 +169,11 @@ const onPanelDrop = () => {
 };
 
 const onPanelActive = (oldPanel: CodeLayoutSplitNPanelInternal | null, newPanel: CodeLayoutSplitNPanelInternal | null) => {
-  console.log('Panel active changed:', { old: oldPanel?.name, new: newPanel?.name });
+  if (debug.value) console.log('Panel active changed:', { old: oldPanel?.name, new: newPanel?.name });
   if (newPanel) {
     // Increment visit count when panel becomes active
-    const visits = newPanel.getData<number>('visits', 0);
-    newPanel.updateData('visits', visits + 1);
+    const visits = newPanel.getData('visits', 0);
+    newPanel.updateData('visits', (visits ?? 0) + 1);
   }
 };
 
@@ -178,17 +187,20 @@ const onGridActive = (oldGrid: CodeLayoutSplitNGridInternal | null, newGrid: Cod
 };
 
 const onAddPanel = (grid: CodeLayoutSplitNGridInternal) => {
+  const panelName = CodeLayoutSplitNPanelInternal.generateUniqueName();
+  const panelNumber = ++panelCount;
+
   const panel = {
-    name: `panel${++panelCount}`,
-    title: `Panel ${panelCount}`,
-    tooltip: `Panel ${panelCount} tooltip`,
-    badge: `${panelCount}`,
+    name: panelName,
+    title: `Panel ${panelNumber}`,
+    tooltip: `Panel ${panelNumber} tooltip`,
+    badge: `${panelNumber}`,
     data: {
-      color: colors[panelCount % colors.length],
+      color: colors[panelNumber % colors.length],
       createdAt: new Date().toISOString(),
       visits: 0,
       notes: ''
-    }
+    } as CodeLayoutPanelData
   };
   return grid.addPanel(panel);
 };
@@ -206,36 +218,79 @@ const onPanelReset = () => {
   onResetAll();
 };
 
+const updatePanelCounter = () => {
+  // Find the highest panel number in the current layout
+  const panels = splitLayoutRef.value?.getAllPanels() || [];
+  const maxNumber = panels.reduce((max: number, panel: CodeLayoutSplitNPanelInternal) => {
+    const match = panel.name.match(/panel(\d+)/);
+    if (match) {
+      const num = parseInt(match[1], 10);
+      return Math.max(max, num);
+    }
+    return max;
+  }, 0);
+  panelCount = maxNumber;
+};
+
 // Initialize layout state after auth and layout instance are ready
 watch([() => auth.isLoggedIn.value, () => splitLayoutRef.value], async ([isLoggedIn, layoutInstance]) => {
-  console.group('DataSaveAndLoad: Layout State Initialization')
-  console.log('Auth Status:', { 
-    isLoggedIn,
-    initialized: auth.initialized.value,
-    user: auth.user.value?.email,
-    session: !!auth.session.value
-  })
-  console.log('Layout Instance:', !!layoutInstance)
-  console.log('Layout State Exists:', !!layoutState)
-  console.log('State ID:', stateId.value)
+  if (debug.value) {
+    console.group('DataSaveAndLoad: Layout State Initialization')
+    console.log('Auth Status:', { 
+      isLoggedIn,
+      initialized: auth.initialized.value,
+      user: auth.user.value?.email,
+      session: !!auth.session.value
+    })
+    console.log('Layout Instance:', !!layoutInstance)
+    console.log('Layout State Exists:', !!layoutState)
+    console.log('State ID:', stateId.value)
+  }
 
   if (isLoggedIn && layoutInstance && !layoutState && auth.user.value?.id) {
-    console.log('🔄 Initializing layout state...')
+    if (debug.value) console.log('🔄 Initializing layout state...')
     try {
       layoutState = useLayoutPersistence({
         supabase,
         stateId: stateId.value || undefined,
         layoutInstance: splitLayoutRef.value,
         autoSync: true,
+        debug: debug.value,
         onError: (error) => {
           console.error('❌ Layout state error:', error)
+        },
+        onBeforeSave: async () => {
+          if (debug.value) console.log('🔄 Before saving layout state...')
+        },
+        onAfterSave: async (state) => {
+          if (debug.value) console.log('✅ After saving layout state:', state.id)
+        },
+        onBeforeLoad: async () => {
+          if (debug.value) console.log('🔄 Before loading layout state...')
+        },
+        onAfterLoad: async (state) => {
+          if (debug.value) console.log('✅ After loading layout state:', state.id)
+          updatePanelCounter();
+        },
+        onBeforeCreateVersion: async () => {
+          if (debug.value) console.log('🔄 Before creating version...')
+        },
+        onAfterCreateVersion: async (version) => {
+          if (debug.value) console.log('✅ After creating version:', version.version_name)
+        },
+        onBeforeLoadVersion: async (version) => {
+          if (debug.value) console.log('🔄 Before loading version:', version.version_name)
+        },
+        onAfterLoadVersion: async (version) => {
+          if (debug.value) console.log('✅ After loading version:', version.version_name)
+          updatePanelCounter();
         }
       });
 
       // Load initial state
-      console.log('🔄 Loading initial state...')
+      if (debug.value) console.log('🔄 Loading initial state...')
       await layoutState.loadState();
-      console.log('✅ Layout state initialized')
+      if (debug.value) console.log('✅ Layout state initialized')
 
       // Save the state ID for future use
       if (layoutState.currentState.value?.state_id) {
@@ -247,78 +302,72 @@ watch([() => auth.isLoggedIn.value, () => splitLayoutRef.value], async ([isLogge
       }
 
       // Update versions list
-      versions.value = layoutState.versions;
+      versions.value = layoutState.versions.value;
 
       // Watch for version changes
-      watch(() => layoutState.versions, (newVersions) => {
-        console.log('Versions updated:', newVersions)
+      watch(() => layoutState.versions.value, (newVersions) => {
+        if (debug.value) console.log('Versions updated:', newVersions)
         versions.value = newVersions;
       }, { immediate: true });
 
       // Fetch versions immediately
       if (layoutState.currentState.value?.id) {
-        console.log('🔄 Fetching versions...')
+        if (debug.value) console.log('🔄 Fetching versions...')
         await layoutState.fetchVersions(layoutState.currentState.value.id);
-        console.log('✅ Versions fetched:', layoutState.versions)
+        if (debug.value) console.log('✅ Versions fetched:', layoutState.versions.value)
       }
     } catch (error) {
-      console.error('❌ Layout state initialization error:', error)
+      if (debug.value) console.error('❌ Layout state initialization error:', error)
     }
   }
-  console.groupEnd()
+  if (debug.value) console.groupEnd()
 }, { immediate: true });
+
+// Watch debug changes and update layout persistence
+watch(debug, (newDebug) => {
+  if (layoutState) {
+    // @ts-ignore - we know this exists internally
+    layoutState.debug = newDebug;
+  }
+});
 
 // Example functions to demonstrate state management
 const handleSaveState = async () => {
-  console.group('DataSaveAndLoad: Save State')
   if (!layoutState) {
-    console.warn('⚠️ No layout state available')
-    console.groupEnd()
+    if (debug.value) console.warn('⚠️ No layout state available')
     return;
   }
   try {
-    console.log('🔄 Saving state...')
     await layoutState.saveState();
-    console.log('✅ Layout state saved successfully');
   } catch (error) {
-    console.error('❌ Failed to save layout state:', error);
+    if (debug.value) console.error('❌ Failed to save layout state:', error);
   }
-  console.groupEnd()
 };
 
 const handleCreateVersion = async () => {
-  console.group('DataSaveAndLoad: Create Version')
   if (!layoutState) {
-    console.warn('⚠️ No layout state available')
-    console.groupEnd()
+    if (debug.value) console.warn('⚠️ No layout state available')
     return;
   }
   try {
-    console.log('🔄 Creating version...')
     const versionName = `Version ${new Date().toLocaleTimeString()}`;
     await layoutState.createVersion(versionName);
-    console.log('✅ New version created:', versionName);
   } catch (error) {
-    console.error('❌ Failed to create version:', error);
+    if (debug.value) console.error('❌ Failed to create version:', error);
   }
-  console.groupEnd()
 };
 
 const handleLoadVersion = async () => {
-  console.group('DataSaveAndLoad: Load Version')
   if (!selectedVersion.value || !layoutState) {
-    console.warn('⚠️ No version or layout state available')
-    console.groupEnd()
+    if (debug.value) console.warn('⚠️ No version or layout state available')
     return;
   }
   try {
-    console.log('🔄 Loading version:', selectedVersion.value.version_name)
     await layoutState.loadVersion(selectedVersion.value);
-    console.log('✅ Version loaded successfully:', selectedVersion.value.version_name);
+    updatePanelCounter();
   } catch (error) {
-    console.error('❌ Failed to load version:', error);
+    if (debug.value) console.error('❌ Failed to load version:', error);
   }
-  console.groupEnd()
 };
 
 // Handle layout changes
@@ -498,5 +547,21 @@ onMounted(() => {
   padding: 8px;
   border-radius: 4px;
   margin: 8px 0;
+}
+
+.debug-toggle {
+  margin-left: auto;
+  background: v-bind('debug ? "#e6f3ff" : "white"');
+  border-color: v-bind('debug ? "#2196f3" : "#ccc"');
+  color: v-bind('debug ? "#2196f3" : "#666"');
+}
+
+.debug-toggle:hover:not(:disabled) {
+  background: v-bind('debug ? "#d1e9ff" : "#f0f0f0"');
+  border-color: v-bind('debug ? "#1976d2" : "#999"');
+}
+
+.debug-toggle.active {
+  font-weight: 500;
 }
 </style>

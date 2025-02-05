@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { nextTick, reactive, type Ref } from "vue";
 import { CodeLayoutGridInternal, CodeLayoutPanelInternal, type CodeLayoutPanelHosterContext, type CodeLayoutPanel, type CodeLayoutDragDropReferencePosition, type CodeLayoutDragDropReferenceAreaType } from "../CodeLayout";
+import type { CodeLayoutInitialPanelConfig } from '../Types';
 
 
 export interface CodeLayoutSplitNGrid extends Omit<CodeLayoutPanel, 'title'> {
@@ -37,7 +38,14 @@ export interface CodeLayoutSplitNPanel extends Omit<CodeLayoutPanel, 'visible'|'
 
 export type CodeLayoutSplitCopyDirection = 'left'|'top'|'bottom'|'right';
 
-
+// Add panel data interface
+export interface CodeLayoutPanelData {
+  color?: string;
+  createdAt?: string;
+  visits?: number;
+  notes?: string;
+  [key: string]: any;
+}
 
 /**
  * Panel type definition of SplitLayout.
@@ -50,7 +58,7 @@ export class CodeLayoutSplitNPanelInternal extends CodeLayoutPanelInternal imple
   iconSmall?: () => any;
   iconLarge?: () => any;
   actions?: Array<{name: string, icon?: () => any, onClick?: () => void}>;
-  data: Record<string, any> = {}; // For storing panel state
+  data: CodeLayoutPanelData = {}; // For storing panel state
   parentGroup: CodeLayoutSplitNGridInternal | null = null;
 
   constructor(parent: CodeLayoutSplitNGridInternal | null = null) {
@@ -205,8 +213,8 @@ export class CodeLayoutSplitNPanelInternal extends CodeLayoutPanelInternal imple
     });
   }
 
-  // Helper method to update data
-  updateData(key: string, value: any) {
+  // Helper method to update data with type safety
+  updateData<K extends keyof CodeLayoutPanelData>(key: K, value: CodeLayoutPanelData[K]) {
     this.data[key] = value;
     // Trigger layout change if parent exists
     if (this.parentGroup?.onLayoutChange) {
@@ -214,9 +222,43 @@ export class CodeLayoutSplitNPanelInternal extends CodeLayoutPanelInternal imple
     }
   }
 
-  // Helper method to get data
-  getData<T>(key: string, defaultValue?: T): T | undefined {
-    return this.data[key] as T ?? defaultValue;
+  // Helper method to get data with type safety
+  getData<K extends keyof CodeLayoutPanelData>(key: K, defaultValue?: CodeLayoutPanelData[K]): CodeLayoutPanelData[K] | undefined {
+    return this.data[key] ?? defaultValue;
+  }
+
+  // Apply initial configuration from layout config
+  applyInitialConfig(config?: CodeLayoutInitialPanelConfig) {
+    if (!config) return;
+
+    const uniqueName = this.name;
+    
+    if (config.titleGenerator) {
+      this.title = config.titleGenerator(uniqueName);
+    }
+    if (config.tooltipGenerator) {
+      this.tooltip = config.tooltipGenerator(uniqueName);
+    }
+    if (config.badgeGenerator) {
+      this.badge = config.badgeGenerator(uniqueName);
+    }
+    if (config.iconGenerator) {
+      this.iconSmall = config.iconGenerator(uniqueName);
+    }
+    if (config.dataGenerator) {
+      this.data = {
+        ...this.data,
+        ...config.dataGenerator(uniqueName)
+      };
+    }
+    if (config.closeType) {
+      this.closeType = config.closeType;
+    }
+  }
+
+  // Generate a unique panel name
+  static generateUniqueName(prefix: string = 'panel'): string {
+    return `${prefix}-${crypto.randomUUID().split('-')[0]}`;
   }
 }
 /**
@@ -294,6 +336,12 @@ export class CodeLayoutSplitNGridInternal extends CodeLayoutGridInternal impleme
     panelResult.children = [];
     panelResult.size = panel.size ?? 0;
     panelResult.accept = panel.accept ?? this.accept;
+
+    // Apply initial configuration if available
+    if (this.context.layoutConfig?.initialPanelConfig) {
+      (panelResult as CodeLayoutSplitNPanelInternal).applyInitialConfig(this.context.layoutConfig.initialPanelConfig);
+    }
+
     this.addChild(panelResult as CodeLayoutSplitNPanelInternal, index);
     this.context.panelInstances.set(panelInternal.name, panelResult as CodeLayoutSplitNPanelInternal);
   
@@ -407,6 +455,33 @@ export class CodeLayoutSplitNGridInternal extends CodeLayoutGridInternal impleme
   }
 }
 
+export interface CodeLayoutInitialPanelConfig {
+  /**
+   * Function to generate panel title
+   */
+  titleGenerator?: (uniqueName: string) => string;
+  /**
+   * Function to generate panel tooltip
+   */
+  tooltipGenerator?: (uniqueName: string) => string;
+  /**
+   * Function to generate panel badge
+   */
+  badgeGenerator?: (uniqueName: string) => string;
+  /**
+   * Function to generate panel icon
+   */
+  iconGenerator?: (uniqueName: string) => (() => any);
+  /**
+   * Function to generate initial panel data
+   */
+  dataGenerator?: (uniqueName: string) => Record<string, any>;
+  /**
+   * Default close type for new panels
+   */
+  closeType?: 'close' | 'hide';
+}
+
 /**
  * Default SplitLayout config
  */
@@ -431,6 +506,10 @@ export interface CodeLayoutSplitNConfig {
    * @param referencePosition Drop source position.
    */
   onNonPanelDrop?: (e: DragEvent, sourcePosition: CodeLayoutDragDropReferenceAreaType, reference: CodeLayoutPanelInternal|undefined, referencePosition: CodeLayoutDragDropReferencePosition|undefined) => void;
+  /**
+   * Initial panel configuration
+   */
+  initialPanelConfig?: CodeLayoutInitialPanelConfig;
 }
 
 /**

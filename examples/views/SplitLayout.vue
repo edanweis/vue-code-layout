@@ -54,12 +54,14 @@
 import IconSearch from '../assets/icons/IconSearch.vue';
 import IconMarkdown from '../assets/icons/IconMarkdown.vue';
 import IconVue from '../assets/icons/IconVue.vue';
-import IconFile from '../assets/icons/IconFile.vue';
+import IconFile from "../assets/icons/IconFile.vue";
 import { ref, onMounted, nextTick, h, onBeforeUnmount, reactive } from 'vue';
-import type { CodeLayoutPanelInternal, CodeLayoutSplitNConfig, CodeLayoutSplitNPanelInternal } from '@edanweis/vue-code-layout';
-import type { CodeLayoutSplitNGridInternal, CodeLayoutSplitNInstance } from '@edanweis/vue-code-layout';
-import { defaultSplitLayoutConfig, SplitLayout, SplitTabItem } from '@edanweis/vue-code-layout';
-import ContextMenuGlobal from '@imengyu/vue3-context-menu';
+import type { CodeLayoutPanelInternal, CodeLayoutSplitNConfig, CodeLayoutSplitNPanelInternal } from '../../library/SplitLayout/SplitN';
+import type { CodeLayoutSplitNGridInternal, CodeLayoutSplitNInstance } from '../../library/SplitLayout/SplitN';
+import { defaultSplitLayoutConfig } from "../../library/SplitLayout/SplitN";
+import SplitLayout from "../../library/SplitLayout/SplitLayout.vue";
+import SplitTabItem from "../../library/SplitLayout/SplitTabItem.vue";
+import ContextMenuGlobal from "@imengyu/vue3-context-menu";
 
 const colors = [
   '#fb0',

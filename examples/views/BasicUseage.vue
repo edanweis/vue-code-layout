@@ -75,10 +75,13 @@ import IconMarkdown from '../assets/icons/IconMarkdown.vue';
 import IconVue from '../assets/icons/IconVue.vue';
 import { ref, reactive, onMounted, nextTick, h, onBeforeUnmount, toRaw } from 'vue';
 import type { MenuOptions } from '@imengyu/vue3-context-menu';
-import { 
-  CodeLayout, CodeLayoutScrollbar, SplitLayout, type CodeLayoutSplitNInstance, 
-  type CodeLayoutConfig, type CodeLayoutInstance, type CodeLayoutPanelInternal 
-} from '@edanweis/vue-code-layout';
+import CodeLayout from '../../library/CodeLayout.vue';
+import CodeLayoutScrollbar from '../../library/Components/CodeLayoutScrollbar.vue';
+import SplitLayout from '../../library/SplitLayout/SplitLayout.vue';
+import type { CodeLayoutSplitNInstance } from '../../library/SplitLayout/SplitN';
+import type { CodeLayoutConfig } from '../../library/CodeLayout';
+import type { CodeLayoutInstance } from '../../library/CodeLayout';
+import type { CodeLayoutPanelInternal } from '../../library/SplitLayout/SplitN';
 import TestContent1 from '../assets/text/Useage.vue?raw';
 //import TestContent1 from '../assets/text/Useage2.vue?raw';
 import TestContent2 from '../../README.md?raw';

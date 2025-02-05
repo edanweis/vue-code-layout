@@ -630,12 +630,13 @@ onBeforeUnmount(() => {
   right: 0;
   top: 0;
   bottom: 0;
-
+  
   &.drag-enter {
+    background-color: var(--code-layout-color-background-mask-light);
+    
     * {
       pointer-events: none;
     }
-    background-color: var(--code-layout-color-background-mask-light);
   }
 }
 </style>

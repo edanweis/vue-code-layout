@@ -449,5 +449,5 @@ defineExpose<SplitNInstance>({
 </script>
 
 <style lang="scss">
-@import "../Scss/Split.scss";
+@forward "../Scss/Split";
 </style>
