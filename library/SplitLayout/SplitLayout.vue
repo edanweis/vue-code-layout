@@ -45,6 +45,7 @@ const emit = defineEmits([
   'gridActive',
   'canLoadLayout',
   'canSaveLayout',
+  'update:lastActive'
 ]);
 const props = defineProps({
   /**
@@ -74,6 +75,13 @@ const props = defineProps({
   layoutConfig: {
     type: Object as PropType<CodeLayoutSplitNConfig>,
     default: () => defaultSplitLayoutConfig
+  },
+  /**
+   * The panel that was last clicked by the user. Can be used with v-model:lastActive.
+   */
+  lastActive: {
+    type: Object as PropType<CodeLayoutPanelInternal|null>,
+    default: null
   },
 })
 
@@ -151,9 +159,37 @@ const instance = {
   activePanel(name) {
     panelInstances.get(name)?.activeSelf();
   },
-  clearLayout() {
-    rootGrid.value.childGrid.splice(0);
-    rootGrid.value.children.splice(0);
+  /**
+   * Clear all panels and grids.
+   * @param options Configuration options for clearing the layout
+   * @param options.leaveEmptyGrid Whether to leave one empty grid after clearing. Defaults to false.
+   */
+  clearLayout(options: { leaveEmptyGrid?: boolean } = {}) {
+    const { leaveEmptyGrid = false } = options;
+    
+    if (leaveEmptyGrid) {
+      // Keep one grid, but clear its contents
+      const firstGrid = rootGrid.value.childGrid[0];
+      if (firstGrid) {
+        firstGrid.children.splice(0);
+        rootGrid.value.childGrid = [firstGrid];
+      } else {
+        // Create a new grid if none exists
+        const newGrid = new CodeLayoutSplitNGridInternal(hosterContext);
+        Object.assign(newGrid, {
+          direction: rootGrid.value.direction,
+          name: rootGrid.value.name + '0',
+          children: [],
+          childGrid: [],
+          size: 100,
+          noAutoShink: false,
+        });
+        rootGrid.value.childGrid = [newGrid];
+      }
+    } else {
+      rootGrid.value.childGrid.splice(0);
+      rootGrid.value.children.splice(0);
+    }
     panelInstances.clear();
   },
   loadLayout(json, instantiatePanelCallback) {
@@ -234,8 +270,20 @@ function onChildGridActiveChildChanged(grid: CodeLayoutSplitNGridInternal) {
   if (context.currentActiveGrid.value === grid) {
     emit('panelActive', lastActivePanel.value, grid.activePanel);
     lastActivePanel.value = grid.activePanel;
+    emit('update:lastActive', grid.activePanel);
   } 
 }
+
+// Watch for external changes to lastActive
+watch(() => props.lastActive, (newValue) => {
+  if (newValue !== lastActivePanel.value) {
+    lastActivePanel.value = newValue;
+    if (newValue) {
+      // Activate the panel if it exists
+      instance.activePanel(newValue.name);
+    }
+  }
+}, { immediate: true });
 
 let generatePanelNameCount = 0;
 
