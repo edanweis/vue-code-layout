@@ -385,8 +385,14 @@ export class CodeLayoutSplitNGridInternal extends CodeLayoutGridInternal impleme
   }
 
   setActiveChild(child: CodeLayoutPanelInternal|null) {
-    super.setActiveChild(child);
-    this.context.childGridActiveChildChanged(this);
+    const oldPanel = this.activePanel;
+    if (oldPanel !== child) {
+      this.activePanel = child;
+      if (child instanceof CodeLayoutSplitNPanelInternal) {
+        child.onActive?.(child);
+      }
+      this.context.childGridActiveChildChanged(this);
+    }
   }
   reselectActiveChild(): void {
     super.reselectActiveChild();
