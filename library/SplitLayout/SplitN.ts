@@ -227,7 +227,7 @@ export class CodeLayoutSplitNPanelInternal extends CodeLayoutPanelInternal imple
     return this.data[key] ?? defaultValue;
   }
 
-  // Apply initial configuration from layout config
+  // Apply initial configuration if available
   applyInitialConfig(config?: CodeLayoutInitialPanelConfig) {
     if (!config) return;
 
@@ -338,9 +338,24 @@ export class CodeLayoutSplitNGridInternal extends CodeLayoutGridInternal impleme
     panelResult.accept = panel.accept ?? this.accept;
 
     // Apply initial configuration if available
-    if (this.context.layoutConfig?.initialPanelConfig) {
-      (panelResult as CodeLayoutSplitNPanelInternal).applyInitialConfig(this.context.layoutConfig.initialPanelConfig);
+    if (this.context.layoutConfig?.defaultPanelConfig || this.context.layoutConfig?.initialPanelConfig) {
+      const config = this.context.layoutConfig?.defaultPanelConfig || this.context.layoutConfig?.initialPanelConfig;
+      (panelResult as CodeLayoutSplitNPanelInternal).applyInitialConfig(config);
     }
+
+    // Example default panel config:
+    /*
+    defaultPanelConfig: {
+      titleGenerator: (uniqueName) => 'New',
+      tooltipGenerator: (uniqueName) => 'New',
+      iconGenerator: (uniqueName) => () => null,
+      dataGenerator: (uniqueName) => ({
+        name: uniqueName,
+        iconSmall: 'solar:pen-new-square-line-duotone'
+      }),
+      closeType: 'close'
+    }
+    */
 
     this.addChild(panelResult as CodeLayoutSplitNPanelInternal, index);
     this.context.panelInstances.set(panelInternal.name, panelResult as CodeLayoutSplitNPanelInternal);

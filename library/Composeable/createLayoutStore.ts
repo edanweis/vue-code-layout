@@ -62,7 +62,15 @@ export function createLayoutStore() {
         onError: async (error) => {
           options.onError?.(error)
           await events.onError?.(error)
-        }
+        },
+        onBeforeSave: events.onBeforeSave,
+        onAfterSave: events.onAfterSave,
+        onBeforeLoad: events.onBeforeLoad,
+        onAfterLoad: events.onAfterLoad,
+        onBeforeCreateVersion: events.onBeforeCreateVersion,
+        onAfterCreateVersion: events.onAfterCreateVersion,
+        onBeforeLoadVersion: events.onBeforeLoadVersion,
+        onAfterLoadVersion: events.onAfterLoadVersion
       })
 
       // Copy all the methods and state from the persistence instance

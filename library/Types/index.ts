@@ -1,4 +1,4 @@
-export interface CodeLayoutInitialPanelConfig {
+export interface CodeLayoutDefaultPanelConfig {
   /**
    * Function to generate panel title
    */
@@ -23,4 +23,7 @@ export interface CodeLayoutInitialPanelConfig {
    * Default close type for new panels
    */
   closeType?: 'close' | 'hide';
-} 
+}
+
+// Keep old interface for backwards compatibility
+export interface CodeLayoutInitialPanelConfig extends CodeLayoutDefaultPanelConfig {} 

@@ -1,6 +1,7 @@
 import { ref } from 'vue'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { onUnmounted } from 'vue'
+import type { CodeLayoutDefaultPanelConfig, CodeLayoutInitialPanelConfig } from '../Types'
 
 // Add deprecation warning
 const warnOnce = (() => {
@@ -62,6 +63,14 @@ export interface UseLayoutPersistenceOptions {
    * Whether to enable debug console logs. Defaults to false
    */
   debug?: boolean
+  /**
+   * Default configuration for new panels
+   */
+  defaultPanelConfig?: CodeLayoutDefaultPanelConfig
+  /**
+   * @deprecated Use defaultPanelConfig instead
+   */
+  initialPanelConfig?: CodeLayoutInitialPanelConfig
   /**
    * Event handlers for layout state operations
    */
@@ -153,7 +162,9 @@ export function useLayoutPersistence(options: UseLayoutPersistenceOptions) {
       updatedAt: 'updated_at'
     },
     additionalData,
-    additionalVersionData
+    additionalVersionData,
+    defaultPanelConfig,
+    initialPanelConfig
   } = options
 
   const currentState = ref<LayoutPersistenceState | null>(null)
@@ -163,11 +174,21 @@ export function useLayoutPersistence(options: UseLayoutPersistenceOptions) {
   const debug = ref(initialDebug)
   let onLayoutChangeCleanup: (() => void) | null = null
 
+  // Helper function for debug logging
+  const log = (message: string, data?: any) => {
+    if (debug.value) {
+      console.group(`[vue-code-layout] ${message}`)
+      if (data) console.log(data)
+      console.groupEnd()
+    }
+  }
+
   // Find or create state for user
   const initializeState = async () => {
     isLoading.value = true
     error.value = null
     try {
+      log('Initializing state', { initialStateId })
       // Try to find existing state by state_id if provided
       if (initialStateId) {
         const { data: existingState, error: fetchError } = await supabase
@@ -178,12 +199,14 @@ export function useLayoutPersistence(options: UseLayoutPersistenceOptions) {
 
         if (fetchError && fetchError.code !== 'PGRST116') throw fetchError // Ignore not found error
         if (existingState) {
+          log('Found existing state', existingState)
           currentState.value = existingState
           await fetchVersions(existingState.id)
           return existingState.state_id
         }
       }
 
+      log('No existing state found, will create new')
       // No state found or no initialStateId provided, return null to trigger creation of new state
       return null
     } catch (err) {
@@ -200,6 +223,7 @@ export function useLayoutPersistence(options: UseLayoutPersistenceOptions) {
     isLoading.value = true
     error.value = null
     try {
+      log('Fetching versions', { stateId })
       const { data, error: versionsError } = await supabase
         .from(tables.versions)
         .select('*')
@@ -208,6 +232,7 @@ export function useLayoutPersistence(options: UseLayoutPersistenceOptions) {
 
       if (versionsError) throw versionsError
       versions.value = data || []
+      log('Versions fetched', versions.value)
     } catch (err) {
       error.value = err
       onError(err)
@@ -225,11 +250,11 @@ export function useLayoutPersistence(options: UseLayoutPersistenceOptions) {
   }
 
   // Save current state
-  const saveState = async () => {
+  const saveState = async (additionalStateData?: Record<string, any> | (() => Record<string, any>)) => {
     isLoading.value = true
     error.value = null
     try {
-      if (debug.value) console.group('Layout Persistence: Save State')
+      log('Saving state')
       let layout
       if (layoutInstance.saveLayout) {
         layout = layoutInstance.saveLayout()
@@ -242,20 +267,21 @@ export function useLayoutPersistence(options: UseLayoutPersistenceOptions) {
 
       // Generate or use existing state ID
       const stateId = currentState.value?.state_id || initialStateId || crypto.randomUUID()
-      if (debug.value) console.log('Using state ID:', stateId)
+      log('Using state ID', stateId)
 
       // Prepare state data
       const stateData = {
         [columns.stateId]: stateId,
         [columns.layout]: layout,
         [columns.updatedAt]: new Date().toISOString(),
-        ...getAdditionalData(additionalData)
+        ...getAdditionalData(additionalData), // Default additional data
+        ...getAdditionalData(additionalStateData) // Override with save-time data
       }
 
       let result: LayoutPersistenceState
       if (currentState.value?.id) {
         // Update existing state
-        if (debug.value) console.log('🔄 Updating existing state')
+        log('Updating existing state')
         const { data, error: updateError } = await supabase
           .from(tables.states)
           .update(stateData)
@@ -263,14 +289,11 @@ export function useLayoutPersistence(options: UseLayoutPersistenceOptions) {
           .select()
           .single()
 
-        if (updateError) {
-          if (debug.value) console.error('❌ Failed to update state:', updateError)
-          throw updateError
-        }
+        if (updateError) throw updateError
         result = data
       } else {
         // Create new state
-        if (debug.value) console.log('🔄 Creating new state')
+        log('Creating new state')
         stateData[columns.createdAt] = new Date().toISOString()
         const { data, error: insertError } = await supabase
           .from(tables.states)
@@ -278,22 +301,14 @@ export function useLayoutPersistence(options: UseLayoutPersistenceOptions) {
           .select()
           .single()
 
-        if (insertError) {
-          if (debug.value) console.error('❌ Failed to create state:', insertError)
-          throw insertError
-        }
+        if (insertError) throw insertError
         result = data
       }
 
-      if (debug.value) console.log('✅ State saved successfully:', result)
+      log('State saved successfully', result)
       currentState.value = result
-      if (debug.value) console.groupEnd()
       return result
     } catch (err) {
-      if (debug.value) {
-        console.error('❌ Save state error:', err)
-        console.groupEnd()
-      }
       error.value = err
       onError(err)
       throw err
@@ -303,15 +318,15 @@ export function useLayoutPersistence(options: UseLayoutPersistenceOptions) {
   }
 
   // Create version
-  const createVersion = async (versionName: string) => {
+  const createVersion = async (versionName: string, additionalVersionStateData?: Record<string, any> | (() => Record<string, any>)) => {
     isLoading.value = true
     error.value = null
     try {
-      if (debug.value) console.group('Layout Persistence: Create Version')
+      log('Creating version', { versionName })
       
       // First ensure we have a saved state
       if (!currentState.value?.id) {
-        if (debug.value) console.log('🔄 No current state, saving state first...')
+        log('No current state, saving state first')
         const savedState = await saveState()
         if (!savedState) {
           throw new Error('Failed to save state')
@@ -330,14 +345,14 @@ export function useLayoutPersistence(options: UseLayoutPersistenceOptions) {
       }
 
       // Create the version
-      if (debug.value) console.log('🔄 Creating version:', versionName)
+      log('Creating version in database')
       const newVersionData = {
         state_id: currentState.value.id,
         [columns.versionName]: versionName,
         [columns.layout]: layout,
-        ...getAdditionalData(additionalVersionData)
+        ...getAdditionalData(additionalVersionData), // Default additional data
+        ...getAdditionalData(additionalVersionStateData) // Override with save-time data
       }
-      if (debug.value) console.log('Version data:', newVersionData)
 
       const { data: createdVersion, error: versionError } = await supabase
         .from(tables.versions)
@@ -345,21 +360,13 @@ export function useLayoutPersistence(options: UseLayoutPersistenceOptions) {
         .select()
         .single()
 
-      if (versionError) {
-        if (debug.value) console.error('❌ Failed to create version:', versionError)
-        throw versionError
-      }
+      if (versionError) throw versionError
 
-      if (debug.value) console.log('✅ Version created successfully:', createdVersion)
+      log('Version created successfully', createdVersion)
 
       // Refresh versions list
       await fetchVersions(currentState.value.id)
-      if (debug.value) console.groupEnd()
     } catch (err) {
-      if (debug.value) {
-        console.error('❌ Create version error:', err)
-        console.groupEnd()
-      }
       error.value = err
       onError(err)
       throw err
@@ -373,6 +380,7 @@ export function useLayoutPersistence(options: UseLayoutPersistenceOptions) {
     isLoading.value = true
     error.value = null
     try {
+      log('Loading version', version)
       const layout = version.layout
       if (layoutInstance.clearLayout) {
         layoutInstance.clearLayout()
@@ -395,6 +403,7 @@ export function useLayoutPersistence(options: UseLayoutPersistenceOptions) {
         grid.fromJSON(layout)
         layoutInstance.notifyRelayout?.()
       }
+      log('Version loaded successfully')
     } catch (err) {
       error.value = err
       onError(err)
@@ -408,17 +417,20 @@ export function useLayoutPersistence(options: UseLayoutPersistenceOptions) {
     isLoading.value = true
     error.value = null
     try {
+      log('Loading state')
       // Initialize state if needed
       if (!currentState.value) {
         const stateId = await initializeState()
         if (!stateId) {
           // No existing state found, create new one
+          log('No existing state found, creating new')
           await saveState()
         }
       }
 
       // Load layout if exists
       if (currentState.value?.layout) {
+        log('Loading layout from state')
         if (layoutInstance.clearLayout) {
           layoutInstance.clearLayout()
         }
@@ -440,6 +452,7 @@ export function useLayoutPersistence(options: UseLayoutPersistenceOptions) {
           grid.fromJSON(currentState.value.layout)
           layoutInstance.notifyRelayout?.()
         }
+        log('Layout loaded successfully')
       }
     } catch (err) {
       error.value = err
@@ -453,6 +466,7 @@ export function useLayoutPersistence(options: UseLayoutPersistenceOptions) {
   if (autoSync && layoutInstance.onLayoutChange) {
     let saveTimeout: ReturnType<typeof setTimeout>
     onLayoutChangeCleanup = layoutInstance.onLayoutChange(() => {
+      log('Layout changed, triggering auto-sync')
       // If debouncing is disabled, save immediately
       if (autoSyncDebounce === false) {
         saveState()
