@@ -1,9 +1,20 @@
-import { type Ref } from 'vue'
+import { type Ref, unref, getCurrentInstance } from 'vue'
 import type { CodeLayoutSplitNInstance, CodeLayoutSplitNPanel } from '../SplitLayout/SplitN'
-import { useLayoutStore } from './createLayoutStore'
+import { useLayoutStore, type LayoutStore } from './createLayoutStore'
 
-export function useLayout() {
-  const store = useLayoutStore()
+export function useLayout(explicitStore?: LayoutStore) {
+  // Check if we're in a component context
+  const isInSetup = !!getCurrentInstance()
+  
+  // If no explicit store and not in setup, warn about potential issues
+  if (!explicitStore && !isInSetup) {
+    console.warn(
+      '[vue-code-layout] useLayout() was called outside of a component setup. ' +
+      'This may lead to issues. Pass the store explicitly when using outside of components.'
+    )
+  }
+
+  const store = explicitStore || useLayoutStore()
 
   /**
    * Set the layout instance reference. This should be called with the ref to your SplitLayout component.
@@ -14,31 +25,32 @@ export function useLayout() {
   }
 
   const addPanel = (panel: CodeLayoutSplitNPanel, makeActive?: boolean) => {
-    if (!store.layoutInstance.value) {
+    const instance = unref(store.layoutInstance)
+    if (!instance) {
       console.warn('[vue-code-layout] Layout instance not set')
       return
     }
-    return store.layoutInstance.value.addPanelToActiveGrid(panel, makeActive)
+    return instance.addPanelToActiveGrid(panel, makeActive)
   }
 
   const getActiveGrid = () => {
-    return store.layoutInstance.value?.getActiveGrid()
+    return unref(store.layoutInstance)?.getActiveGrid()
   }
 
   const getPanelByName = (name: string) => {
-    return store.layoutInstance.value?.getPanelByName(name)
+    return unref(store.layoutInstance)?.getPanelByName(name)
   }
 
   const replacePanel = (panelId: string, newPanel: CodeLayoutSplitNPanel, makeActive?: boolean) => {
-    return store.layoutInstance.value?.replacePanel(panelId, newPanel, makeActive)
+    return unref(store.layoutInstance)?.replacePanel(panelId, newPanel, makeActive)
   }
 
   const getRootGrid = () => {
-    return store.layoutInstance.value?.getRootGrid()
+    return unref(store.layoutInstance)?.getRootGrid()
   }
 
   const clearLayout = (options?: { leaveEmptyGrid?: boolean }) => {
-    return store.layoutInstance.value?.clearLayout(options)
+    return unref(store.layoutInstance)?.clearLayout(options)
   }
 
   return {

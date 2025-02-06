@@ -123,8 +123,8 @@ export function createLayoutStore() {
       if (isInitialized.value) {
         throw new Error('[vue-code-layout] Cannot set layout instance after initialization.')
       }
-      // Handle both Ref and direct instance values
-      layoutInstance.value = unref(instance)
+      // Store the ref itself, not its value
+      layoutInstance.value = instance
     },
 
     layoutInstance,
@@ -159,7 +159,8 @@ export function createLayoutStore() {
   return {
     install(app: App) {
       app.provide(LAYOUT_STORE_KEY, store)
-    }
+    },
+    store // Expose the store instance
   }
 }
 
