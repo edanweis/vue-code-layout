@@ -1,4 +1,4 @@
-import { inject, ref, type App } from 'vue'
+import { inject, ref, type App, type Ref, unref } from 'vue'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { useLayoutPersistence } from './useLayoutPersistence'
 import type { LayoutPersistenceState, LayoutPersistenceVersion, UseLayoutPersistenceOptions } from './useLayoutPersistence'
@@ -23,7 +23,8 @@ export interface LayoutStoreInitOptions extends Omit<UseLayoutPersistenceOptions
 
 export interface LayoutStore {
   initialize: (options: LayoutStoreInitOptions) => Promise<void>
-  setLayoutInstance: (instance: any) => void
+  setLayoutInstance: (instance: Ref<any> | any) => void
+  layoutInstance: Ref<any>
   currentState: ReturnType<typeof useLayoutPersistence>['currentState']
   versions: ReturnType<typeof useLayoutPersistence>['versions']
   isLoading: ReturnType<typeof useLayoutPersistence>['isLoading']
@@ -122,8 +123,11 @@ export function createLayoutStore() {
       if (isInitialized.value) {
         throw new Error('[vue-code-layout] Cannot set layout instance after initialization.')
       }
-      layoutInstance.value = instance
+      // Handle both Ref and direct instance values
+      layoutInstance.value = unref(instance)
     },
+
+    layoutInstance,
 
     // Initialize with empty refs and no-op functions that throw
     currentState: ref<LayoutPersistenceState | null>(null),
