@@ -230,7 +230,35 @@ const instance = {
   addPanelToActiveGrid(panel: CodeLayoutSplitNPanel, makeActive?: boolean) {
     const activeGrid = this.getActiveGrid();
     if (!activeGrid) return undefined;
-    return activeGrid.addPanel(panel, { makeActive });
+    return activeGrid.addPanel(panel, undefined, undefined);
+  },
+  replacePanel(panelId: string, newPanel: CodeLayoutSplitNPanel, makeActive?: boolean): boolean {
+    function searchAndReplace(grid: CodeLayoutSplitNGridInternal): boolean {
+      // Search in the panels (children) of the grid
+      for (let i = 0; i < grid.children.length; i++) {
+        const existingPanel = grid.children[i] as CodeLayoutSplitNPanelInternal;
+        if (existingPanel.name === panelId) {
+          // Remove the old panel from the children array
+          grid.children.splice(i, 1);
+          // Remove from the global panelInstances map
+          panelInstances.delete(existingPanel.name);
+          // Add the new panel at the same index
+          const newPanelInstance = grid.addPanel(newPanel, undefined, i);
+          if (makeActive) {
+            grid.setActiveChild(newPanelInstance);
+          }
+          return true;
+        }
+      }
+      // If not found in this grid, search in its child grids recursively
+      for (const childGrid of grid.childGrid) {
+        if (searchAndReplace(childGrid)) {
+          return true;
+        }
+      }
+      return false;
+    }
+    return searchAndReplace(rootGrid.value as CodeLayoutSplitNGridInternal);
   }
 } as CodeLayoutSplitNInstance;
 

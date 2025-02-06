@@ -44,6 +44,7 @@
     <div v-if="showData" class="demo-pre">
       <button @click="onPanelReset()">Reset All Panel</button>
       <button @click="onPanelDrop()">Refresh Panel Tree</button>
+      <button @click="onReplaceActivePanel()">Replace Active Panel</button>
       <br>
       {{ debugGridTreeText }} 
     </div>
@@ -158,6 +159,26 @@ function onPanelMenu(panel: CodeLayoutPanelInternal, e: MouseEvent) {
         label: "Menu of " + panel.name,
         onClick: () => {
           alert("You click a menu item");
+        }
+      },
+      {
+        label: "Replace Panel",
+        onClick: () => {
+          count++;
+          const success = splitLayoutRef.value?.replacePanel(panel.name, {
+            title: `Replaced Panel ${count}`,
+            tooltip: `Replaced Panel ${count}`,
+            name: panel.name, // keep same name to replace
+            data: count,
+            iconSmall: () => h(getRandomIcon()),
+          }, true);
+          
+          if (success) {
+            console.log('Panel replaced successfully');
+          } else {
+            console.log('Failed to replace panel');
+          }
+          getDebugGridTreeText();
         }
       },
       {
@@ -329,6 +350,30 @@ function saveLayout() {
   }
 
   splitLayoutRef.value?.getActiveGird()?.activePanel
+}
+
+function onReplaceActivePanel() {
+  const activeGrid = splitLayoutRef.value?.getActiveGrid();
+  if (!activeGrid?.activePanel) {
+    console.log('No active panel to replace');
+    return;
+  }
+
+  count++;
+  const success = splitLayoutRef.value?.replacePanel(activeGrid.activePanel.name, {
+    title: `Replaced Panel ${count}`,
+    tooltip: `Replaced Panel ${count}`,
+    name: activeGrid.activePanel.name,
+    data: count,
+    iconSmall: () => h(getRandomIcon()),
+  }, true);
+  
+  if (success) {
+    console.log('Panel replaced successfully');
+  } else {
+    console.log('Failed to replace panel');
+  }
+  getDebugGridTreeText();
 }
 
 onMounted(() => {

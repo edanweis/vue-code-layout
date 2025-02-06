@@ -169,10 +169,6 @@ h2 {
 }
 </style>
 
-```
-
-:::
-
 ## Panel operation
 
 Definition:
@@ -574,3 +570,61 @@ Tip: Vue may unmont and recreate your components in the following two situations
 * In development mode, when you modify the code, HMR overloads
 
 At this point, Vue may unmont and recreate your component, causing the component state to be lost. Therefore, you need to handle your own component and save the relevant state.
+
+## Adding Panels
+
+You can add panels to a grid using the `addPanel` method. For example, to add a panel to a specific grid:
+
+```ts
+// Add a panel to a specific grid
+grid.addPanel({
+  title: 'Panel1',
+  tooltip: 'Panel 1 tooltip',
+  name: 'panel1',
+  data: 1
+});
+```
+
+If you prefer to add a panel to the currently active grid and optionally make it active immediately, use the convenience method `addPanelToActiveGrid`:
+
+```ts
+const newPanel = splitLayoutInstance.addPanelToActiveGrid({
+  title: 'Panel1',
+  tooltip: 'Panel 1 tooltip',
+  name: 'panel1',
+  data: 1
+}, true); // true to make it active
+```
+
+Note: The `addPanel` method now uses only optional parameters for startOpen and index, without additional options for active grid handling.
+
+## Replacing Panels
+
+If you need to replace an existing panel with a new one while maintaining its position, you can use the `replacePanel` method. This method searches the entire layout for a panel with the given id (panel name), removes it, and inserts the new panel in the same spot. Optionally, you can make the new panel active.
+
+Example:
+
+```ts
+const success = splitLayoutInstance.replacePanel('panel1', {
+  title: 'New Panel1',
+  tooltip: 'Updated tooltip for Panel 1',
+  name: 'panel1',
+  data: 100
+}, true); // true to make new panel active
+
+if (success) {
+  console.log('Panel replaced successfully');
+} else {
+  console.log('Panel not found!');
+}
+```
+
+## Other Methods
+
+The instance also includes additional methods such as:
+
+- `clearLayout(options: { leaveEmptyGrid?: boolean })`: Clears the entire layout.
+- `saveLayout()`: Saves the current layout as JSON.
+- `loadLayout(json, instantiatePanelCallback)`: Loads a previously saved layout.
+
+Use these methods as needed to manage your Split Layout component.
