@@ -11,6 +11,7 @@ export * from './Composeable/MiniTimeout';
 export * from './Composeable/PanelMenu';
 export * from './Language/index';
 export * from './Composeable/createLayoutStore';
+export * from './Composeable/useLayout';
 
 import CodeLayout from './CodeLayout.vue';
 import CodeLayoutEmpty from './CodeLayoutEmpty.vue';

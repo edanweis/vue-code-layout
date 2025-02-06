@@ -121,8 +121,9 @@ import { useAuthProvider } from '../providers/AuthProvider'
 import type { LayoutPersistenceState, LayoutPersistenceVersion } from '../../library/Composeable/useLayoutPersistence'
 import { CodeLayoutSplitNPanelInternal, type CodeLayoutSplitNGridInternal, defaultSplitLayoutConfig } from '../../library/SplitLayout/SplitN'
 import type { CodeLayoutPanelData } from '../../library/SplitLayout/SplitN'
+import { useLayout } from '../../library/Composeable/useLayout'
 
-const splitLayoutRef = ref();
+const layout = useLayout()
 const versions = ref<ReturnType<typeof useLayoutPersistence>['versions']['value']>([]);
 const selectedVersion = ref<LayoutPersistenceVersion | null>(null);
 let layoutState: ReturnType<typeof useLayoutPersistence>;
@@ -167,8 +168,8 @@ const onPanelClose = (panel: CodeLayoutSplitNPanelInternal, resolve: () => void)
 };
 
 const onPanelDrop = () => {
-  if (splitLayoutRef.value) {
-    console.log('Panel Tree:', splitLayoutRef.value.getGridTreeDebugText());
+  if (layout.layoutInstance.value) {
+    console.log('Panel Tree:', layout.layoutInstance.value.getGridTreeDebugText());
   }
 };
 
@@ -219,10 +220,10 @@ const onAddPanel = (grid: CodeLayoutSplitNGridInternal) => {
 };
 
 const onResetAll = () => {
-  if (splitLayoutRef.value) {
-    splitLayoutRef.value.clearLayout();
+  if (layout.layoutInstance.value) {
+    layout.layoutInstance.value.clearLayout();
     panelCount = 0;
-    const rootGrid = splitLayoutRef.value.getRootGrid();
+    const rootGrid = layout.layoutInstance.value.getRootGrid();
     onAddPanel(rootGrid);
   }
 };
@@ -233,20 +234,23 @@ const onPanelReset = () => {
 
 const updatePanelCounter = () => {
   // Find the highest panel number in the current layout
-  const panels = splitLayoutRef.value?.getAllPanels() || [];
+  const grid = layout.getRootGrid()
+  if (!grid) return
+
+  const panels = grid.children || []
   const maxNumber = panels.reduce((max: number, panel: CodeLayoutSplitNPanelInternal) => {
-    const match = panel.name.match(/panel(\d+)/);
+    const match = panel.name.match(/panel(\d+)/)
     if (match) {
-      const num = parseInt(match[1], 10);
-      return Math.max(max, num);
+      const num = parseInt(match[1], 10)
+      return Math.max(max, num)
     }
-    return max;
-  }, 0);
-  panelCount = maxNumber;
-};
+    return max
+  }, 0)
+  panelCount = maxNumber
+}
 
 // Initialize layout state after auth and layout instance are ready
-watch([() => auth.isLoggedIn.value, () => splitLayoutRef.value], async ([isLoggedIn, layoutInstance]) => {
+watch([() => auth.isLoggedIn.value], async ([isLoggedIn]) => {
   if (debug.value) {
     console.group('DataSaveAndLoad: Layout State Initialization')
     console.log('Auth Status:', { 
@@ -255,18 +259,18 @@ watch([() => auth.isLoggedIn.value, () => splitLayoutRef.value], async ([isLogge
       user: auth.user.value?.email,
       session: !!auth.session.value
     })
-    console.log('Layout Instance:', !!layoutInstance)
+    console.log('Layout Instance:', !!layout.layoutInstance.value)
     console.log('Layout State Exists:', !!layoutState)
     console.log('State ID:', stateId.value)
   }
 
-  if (isLoggedIn && layoutInstance && !layoutState && auth.user.value?.id) {
+  if (isLoggedIn && layout.layoutInstance.value && !layoutState && auth.user.value?.id) {
     if (debug.value) console.log('🔄 Initializing layout state...')
     try {
       layoutState = useLayoutPersistence({
         supabase,
         stateId: stateId.value || undefined,
-        layoutInstance: splitLayoutRef.value,
+        layoutInstance: layout.layoutInstance.value,
         autoSync: true,
         debug: debug.value,
         onError: (error) => {
@@ -322,19 +326,11 @@ watch([() => auth.isLoggedIn.value, () => splitLayoutRef.value], async ([isLogge
         if (debug.value) console.log('Versions updated:', newVersions)
         versions.value = newVersions;
       }, { immediate: true });
-
-      // Fetch versions immediately
-      if (layoutState.currentState.value?.id) {
-        if (debug.value) console.log('🔄 Fetching versions...')
-        await layoutState.fetchVersions(layoutState.currentState.value.id);
-        if (debug.value) console.log('✅ Versions fetched:', layoutState.versions.value)
-      }
     } catch (error) {
-      if (debug.value) console.error('❌ Layout state initialization error:', error)
+      console.error('Failed to initialize layout state:', error)
     }
   }
-  if (debug.value) console.groupEnd()
-}, { immediate: true });
+}, { immediate: true })
 
 // Watch debug changes and update layout persistence
 watch(debug, (newDebug) => {
@@ -402,8 +398,8 @@ const formatDate = (dateString: string) => {
 
 onMounted(() => {
   // Initialize with a default panel
-  if (splitLayoutRef.value) {
-    const rootGrid = splitLayoutRef.value.getRootGrid();
+  if (layout.layoutInstance.value) {
+    const rootGrid = layout.layoutInstance.value.getRootGrid();
     onAddPanel(rootGrid);
   }
 });

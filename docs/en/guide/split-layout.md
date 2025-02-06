@@ -628,3 +628,93 @@ The instance also includes additional methods such as:
 - `loadLayout(json, instantiatePanelCallback)`: Loads a previously saved layout.
 
 Use these methods as needed to manage your Split Layout component.
+
+## Accessing Layout from Other Components
+
+There are two ways to access and modify the layout from other components:
+
+### 1. Using the useLayout Composable (Recommended)
+
+The `useLayout` composable provides a convenient way to access layout functionality from any component:
+
+```typescript
+import { useLayout } from '@edanweis/vue-code-layout'
+
+// In your component:
+const layout = useLayout()
+
+// Add a panel to the active grid
+const addNewPanel = () => {
+  layout.addPanel({
+    title: 'New Panel',
+    name: 'panel-' + Date.now(), // ensure unique name
+    tooltip: 'New Panel Tooltip',
+    data: { /* your panel data */ }
+  }, true) // true to make it active
+}
+
+// Get a panel by name
+const panel = layout.getPanelByName('my-panel')
+
+// Replace a panel
+const success = layout.replacePanel('panel-to-replace', {
+  title: 'Replacement Panel',
+  name: 'panel-to-replace',
+  tooltip: 'Replaced Panel'
+}, true)
+
+// Clear the layout
+layout.clearLayout()
+
+// Save/load layout state
+await layout.saveState()
+await layout.loadState()
+```
+
+### 2. Using Component References
+
+For direct access to the SplitLayout component, you can use Vue's ref system:
+
+```typescript
+// In parent component:
+<template>
+  <SplitLayout ref="splitLayoutRef" />
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue'
+import type { CodeLayoutSplitNInstance } from '@edanweis/vue-code-layout'
+
+const splitLayoutRef = ref<CodeLayoutSplitNInstance>()
+
+// Pass the ref to child components if needed
+defineExpose({ splitLayoutRef })
+</script>
+
+// In child component:
+const props = defineProps({
+  layoutRef: {
+    type: Object as PropType<Ref<CodeLayoutSplitNInstance>>,
+    required: true
+  }
+})
+
+// Then use it:
+const addPanel = () => {
+  const activeGrid = props.layoutRef.value?.getActiveGrid()
+  if (activeGrid) {
+    activeGrid.addPanel({
+      title: 'New Panel',
+      name: 'panel-' + Date.now(),
+      tooltip: 'New Panel'
+    })
+  }
+}
+```
+
+The `useLayout` composable is recommended as it:
+- Provides a simpler API
+- Handles initialization automatically
+- Combines layout instance and store functionality
+- Can be used from any component without prop drilling
+- Includes TypeScript support out of the box
