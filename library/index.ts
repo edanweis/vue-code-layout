@@ -42,7 +42,8 @@ export type {
 } from './Composeable/useLayoutPersistence'
 
 // Create the layout store plugin
-export const layoutStore = createLayoutStore();
+const { install, store } = createLayoutStore();
+export const layoutStore = store;
 
 export default {
   install(app: App) {
@@ -56,6 +57,6 @@ export default {
     app.component('SplitN', SplitN);
     
     // Install the layout store plugin
-    layoutStore.install(app)
+    install(app)
   },
 }
