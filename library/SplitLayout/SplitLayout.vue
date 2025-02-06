@@ -143,7 +143,14 @@ const instance = {
   },
   getRootGrid: () => rootGrid.value as CodeLayoutSplitNGridInternal,
   getPanelByName: (name) => panelInstances.get(name),
+  /**
+   * @deprecated Use getActiveGrid() instead - this method name contains a typo
+   */
   getActiveGird: () => (currentActiveGrid.value || rootGrid.value) as CodeLayoutSplitNGridInternal,
+  /**
+   * Obtain a grid that is currently active and can be used to add panels.
+   */
+  getActiveGrid: () => (currentActiveGrid.value || rootGrid.value) as CodeLayoutSplitNGridInternal,
   getGridByName: (name) => {
     function loop(grid: CodeLayoutSplitNGridInternal, name2: string) : CodeLayoutSplitNGridInternal|undefined {
       for (const iterator of grid.childGrid) {
@@ -220,7 +227,11 @@ const instance = {
     rootGrid.value.notifyRelayout();
   },
   saveLayout: () => rootGrid.value.toJson(),
-  
+  addPanelToActiveGrid(panel: CodeLayoutSplitNPanel, makeActive?: boolean) {
+    const activeGrid = this.getActiveGrid();
+    if (!activeGrid) return undefined;
+    return activeGrid.addPanel(panel, { makeActive });
+  }
 } as CodeLayoutSplitNInstance;
 
 const lastActivePanel  = ref<CodeLayoutPanelInternal|null>(null);

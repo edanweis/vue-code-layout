@@ -42,6 +42,8 @@
     <SplitLayout
       ref="splitLayoutRef"
       :layoutConfig="config"
+      
+      @update:lastActive="onLastActiveChange"
       @panelClose="onPanelClose"
       @panelDrop="onPanelDrop"
       @panelActive="onPanelActive"
@@ -101,6 +103,7 @@
         <p>Auth Status: {{ auth.isLoggedIn.value ? 'Logged In' : 'Not Logged In' }}</p>
         <p>Current State ID: {{ layoutState?.currentState.value?.id }}</p>
         <p>Versions Count: {{ versions.length }}</p>
+        <p>Last Active Panel: {{ lastActivePanel?.name }} ({{ lastActivePanel?.title }})</p>
         <p>Versions:</p>
         <pre>{{ JSON.stringify(versions, null, 2) }}</pre>
       </div>
@@ -130,6 +133,7 @@ const showData = ref(false);
 const colors = ['#ffcccc', '#ccffcc', '#ccccff', '#ffffcc', '#ffccff', '#ccffff'];
 const config = { ...defaultSplitLayoutConfig };
 let panelCount = 0;
+const lastActivePanel = ref<CodeLayoutSplitNPanelInternal | null>(null);
 
 // Add state ID management
 const stateId = ref<string | null>(null);
@@ -168,12 +172,21 @@ const onPanelDrop = () => {
   }
 };
 
+const onLastActiveChange = (panel: CodeLayoutSplitNPanelInternal | null) => {
+  if (debug.value) console.log('Last active panel changed:', { panel: panel?.name });
+  lastActivePanel.value = panel;
+};
+
 const onPanelActive = (oldPanel: CodeLayoutSplitNPanelInternal | null, newPanel: CodeLayoutSplitNPanelInternal | null) => {
   if (debug.value) console.log('Panel active changed:', { old: oldPanel?.name, new: newPanel?.name });
   if (newPanel) {
     // Increment visit count when panel becomes active
     const visits = newPanel.getData('visits', 0);
     newPanel.updateData('visits', (visits ?? 0) + 1);
+  }
+  // Update lastActivePanel if it's different
+  if (lastActivePanel.value !== newPanel) {
+    lastActivePanel.value = newPanel;
   }
 };
 

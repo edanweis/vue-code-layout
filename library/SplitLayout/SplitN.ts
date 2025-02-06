@@ -343,20 +343,6 @@ export class CodeLayoutSplitNGridInternal extends CodeLayoutGridInternal impleme
       (panelResult as CodeLayoutSplitNPanelInternal).applyInitialConfig(config);
     }
 
-    // Example default panel config:
-    /*
-    defaultPanelConfig: {
-      titleGenerator: (uniqueName) => 'New',
-      tooltipGenerator: (uniqueName) => 'New',
-      iconGenerator: (uniqueName) => () => null,
-      dataGenerator: (uniqueName) => ({
-        name: uniqueName,
-        iconSmall: 'solar:pen-new-square-line-duotone'
-      }),
-      closeType: 'close'
-    }
-    */
-
     this.addChild(panelResult as CodeLayoutSplitNPanelInternal, index);
     this.context.panelInstances.set(panelInternal.name, panelResult as CodeLayoutSplitNPanelInternal);
   
@@ -561,9 +547,15 @@ export interface CodeLayoutSplitNInstance {
    */
   getGridByName(name: string): CodeLayoutSplitNGridInternal | undefined,
   /**
-   * Obtain a grid that is currently actived by user and can be used to add panels.
+   * @deprecated Use getActiveGrid() instead - this method name contains a typo
    */
   getActiveGird() : CodeLayoutSplitNGridInternal|undefined;
+
+  /**
+   * Obtain a grid that is currently active and can be used to add panels.
+   * @returns The currently active grid, or the root grid if no grid is active
+   */
+  getActiveGrid() : CodeLayoutSplitNGridInternal|undefined;
 
   getGridTreeDebugText() : string;
 
@@ -588,6 +580,14 @@ export interface CodeLayoutSplitNInstance {
    * instantiatePanelCallback will sequentially call all panels, where you can process panel data.
    */
   loadLayout(json: any, instantiatePanelCallback: (data: CodeLayoutSplitNPanel) => CodeLayoutSplitNPanel): void;
+
+  /**
+   * Convenience method to add a panel to the currently active grid and optionally make it active.
+   * @param panel Panel to add
+   * @param makeActive Whether to make the panel active after adding it
+   * @returns The added panel instance, or undefined if no active grid
+   */
+  addPanelToActiveGrid(panel: CodeLayoutSplitNPanel, makeActive?: boolean): CodeLayoutSplitNPanelInternal | undefined;
 }
 
 export interface CodeLayoutSplitLayoutContext {
