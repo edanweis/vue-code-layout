@@ -32,7 +32,7 @@
 <script setup lang="ts">
 import { ref, provide, type Ref, type PropType, watch, onMounted, nextTick, onBeforeUnmount } from 'vue';
 import { type CodeLayoutPanelInternal, type CodeLayoutPanelHosterContext, type CodeLayoutGrid, type CodeLayoutDragDropReferencePosition, type CodeLayoutConfig, defaultCodeLayoutConfig } from '../CodeLayout';
-import { CodeLayoutSplitNGridInternal, type CodeLayoutSplitLayoutContext, type CodeLayoutSplitNInstance, CodeLayoutSplitNPanelInternal, defaultSplitLayoutConfig, type CodeLayoutSplitNConfig } from './SplitN';
+import { CodeLayoutSplitNGridInternal, type CodeLayoutSplitLayoutContext, type CodeLayoutSplitNInstance, CodeLayoutSplitNPanelInternal, defaultSplitLayoutConfig, type CodeLayoutSplitNConfig, type CodeLayoutSplitNPanel } from './SplitN';
 import SplitNest from './SplitNest.vue';
 import SplitTab from './SplitTab.vue';
 import { usePanelDraggerRoot } from '../Composeable/DragDrop';
