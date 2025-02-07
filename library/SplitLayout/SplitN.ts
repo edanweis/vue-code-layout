@@ -447,6 +447,7 @@ export class CodeLayoutSplitNGridInternal extends CodeLayoutGridInternal impleme
         tooltip: child.tooltip,
         badge: child.badge,
         data: child.data,
+        closeType: child.closeType,
         // Don't serialize functions, just their existence
         hasIconSmall: !!child.iconSmall,
         hasIconLarge: !!child.iconLarge,

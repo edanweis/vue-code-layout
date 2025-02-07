@@ -174,6 +174,29 @@ The layout persistence system also preserves panel close types (`unSave` or `clo
 
 This means that panels will maintain their close behavior preferences across save and load operations without any additional configuration required.
 
+### Layout Arrangement Options
+
+When loading a layout, you can specify how panels should be arranged using the `arrangement` option. This is particularly useful when you want to display panels in a specific pattern regardless of their original layout.
+
+```typescript
+// Load layout with default arrangement (preserves original structure)
+await layoutState.loadVersion(version)
+
+// Load layout with grid arrangement (organizes panels in a square-like grid)
+await layoutState.loadVersion(version, { arrangement: 'grid' })
+```
+
+The grid arrangement option will:
+1. Collect all panels from the layout
+2. Calculate the optimal grid dimensions (trying to maintain a square ratio)
+3. Create a new grid structure with rows and columns
+4. Distribute panels evenly across the grid cells
+
+This is useful when you want to:
+- View all panels simultaneously in an organized manner
+- Compare multiple panels side by side
+- Create a dashboard-like layout from any saved layout
+
 ## Example Component
 
 Here's a complete example showing how to implement layout persistence with version control:

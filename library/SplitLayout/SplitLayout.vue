@@ -199,11 +199,106 @@ const instance = {
     }
     panelInstances.clear();
   },
-  loadLayout(json, instantiatePanelCallback) {
+  loadLayout(json, instantiatePanelCallback, options: { arrangement?: 'default' | 'grid' } = {}) {
     if (!json)
       return;
     this.clearLayout();
 
+    // If using grid arrangement, collect all panels first
+    if (options.arrangement === 'grid') {
+      const allPanels: any[] = [];
+      
+      // Helper to collect panels from the layout tree
+      function collectPanels(grid: any) {
+        if (grid.children) {
+          allPanels.push(...grid.children);
+        }
+        if (grid.childGrid) {
+          grid.childGrid.forEach((childGrid: any) => collectPanels(childGrid));
+        }
+      }
+      
+      collectPanels(json);
+      
+      if (allPanels.length === 0) return;
+
+      // Calculate grid dimensions
+      const totalPanels = allPanels.length;
+      const cols = Math.ceil(Math.sqrt(totalPanels));
+      const rows = Math.ceil(totalPanels / cols);
+
+      // Create root grid structure
+      const rootGridInstance = rootGrid.value as CodeLayoutSplitNGridInternal;
+      rootGridInstance.direction = 'vertical';
+      
+      // Create row grids
+      for (let r = 0; r < rows; r++) {
+        const rowGrid = new CodeLayoutSplitNGridInternal(hosterContext);
+        Object.assign(rowGrid, {
+          direction: 'horizontal',
+          name: `row-${r}`,
+          children: [],
+          childGrid: [],
+          size: 100 / rows,
+          noAutoShink: false,
+        });
+
+        // Create column grids within each row
+        const panelsInRow = Math.min(cols, totalPanels - (r * cols));
+        for (let c = 0; c < panelsInRow; c++) {
+          const colGrid = new CodeLayoutSplitNGridInternal(hosterContext);
+          Object.assign(colGrid, {
+            direction: 'vertical',
+            name: `col-${r}-${c}`,
+            children: [],
+            childGrid: [],
+            size: 100 / panelsInRow,
+            noAutoShink: false,
+          });
+
+          // Get panel for this position
+          const panelIndex = r * cols + c;
+          if (panelIndex < totalPanels) {
+            const childPanel = allPanels[panelIndex];
+            
+            // Create base panel data
+            const panelData = {
+              ...childPanel,
+              data: childPanel.data || {},
+              iconSmall: undefined,
+              iconLarge: undefined,
+              actions: childPanel.hasActions ? [] : undefined,
+              closeType: childPanel.closeType || undefined
+            };
+
+            // Restore icons if we have defaultPanelConfig
+            if (hosterContext.layoutConfig?.defaultPanelConfig) {
+              const config = hosterContext.layoutConfig.defaultPanelConfig;
+              if (childPanel.hasIconSmall && config.iconGenerator) {
+                panelData.iconSmall = config.iconGenerator(childPanel.name);
+              }
+              if (childPanel.hasIconLarge && config.iconGenerator) {
+                panelData.iconLarge = config.iconGenerator(childPanel.name);
+              }
+            }
+
+            // Process panel through callback and add to grid
+            const processedData = instantiatePanelCallback(panelData);
+            const panel = colGrid.addPanel(processedData);
+            panel.loadFromJson(childPanel);
+          }
+
+          rowGrid.addChildGrid(colGrid);
+        }
+
+        rootGridInstance.addChildGrid(rowGrid);
+      }
+
+      rootGridInstance.notifyRelayout();
+      return;
+    }
+
+    // Default layout loading behavior
     function loadGrid(grid: any, gridInstance: CodeLayoutSplitNGridInternal) {
       gridInstance.loadFromJson(grid);
 
@@ -220,11 +315,9 @@ const instance = {
           const panelData = {
             ...childPanel,
             data: childPanel.data || {},
-            // Don't restore icon functions as null functions
             iconSmall: undefined,
             iconLarge: undefined,
             actions: childPanel.hasActions ? [] : undefined,
-            // Restore closeType if it exists
             closeType: childPanel.closeType || undefined
           };
 
