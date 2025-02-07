@@ -175,7 +175,9 @@ const onLayoutChangeCallback = ref<(() => void) | null>(null);
 
 // Panel management functions
 const onPanelClose = (panel: CodeLayoutSplitNPanelInternal, resolve: () => void) => {
-  resolve();
+  console.log('🔄 Closing panel:', panel.name);
+  resolve(); // This will trigger the actual panel removal
+  handleLayoutChange(); // Save the layout after closing
 };
 
 const onPanelDrop = () => {
@@ -220,6 +222,7 @@ const onAddPanel = (grid: CodeLayoutSplitNGridInternal) => {
     title: `Panel ${panelNumber}`,
     tooltip: `Panel ${panelNumber} tooltip`,
     badge: `${panelNumber}`,
+    closeType: 'close',
     data: {
       color: colors[panelNumber % colors.length],
       createdAt: new Date().toISOString(),

@@ -656,9 +656,11 @@ export interface CodeLayoutSplitNInstance {
    */
   activePanel(name: string): void;
   /**
-   * Clear all grid.
+   * Clear all panels and grids.
+   * @param options Configuration options for clearing the layout
+   * @param options.leaveEmptyGrid Whether to leave one empty grid after clearing. Defaults to false.
    */
-  clearLayout(): void;
+  clearLayout(options?: { leaveEmptyGrid?: boolean }): void;
   /**
    * Save current layout to JSON data.
    */
