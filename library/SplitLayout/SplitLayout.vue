@@ -216,8 +216,32 @@ const instance = {
         gridInstance.notifyRelayout()
       } else if (grid.childGrid instanceof Array) {
         for (const childPanel of grid.children) {
-          const data = instantiatePanelCallback(childPanel);
-          const panel = gridInstance.addPanel(data);
+          // Create base panel data
+          const panelData = {
+            ...childPanel,
+            data: childPanel.data || {},
+            // Don't restore icon functions as null functions
+            iconSmall: undefined,
+            iconLarge: undefined,
+            actions: childPanel.hasActions ? [] : undefined,
+            // Restore closeType if it exists
+            closeType: childPanel.closeType || undefined
+          };
+
+          // If we have defaultPanelConfig, use it to restore icons
+          if (hosterContext.layoutConfig?.defaultPanelConfig) {
+            const config = hosterContext.layoutConfig.defaultPanelConfig;
+            if (childPanel.hasIconSmall && config.iconGenerator) {
+              panelData.iconSmall = config.iconGenerator(childPanel.name);
+            }
+            if (childPanel.hasIconLarge && config.iconGenerator) {
+              panelData.iconLarge = config.iconGenerator(childPanel.name);
+            }
+          }
+
+          // Let the callback further process the panel
+          const processedData = instantiatePanelCallback(panelData);
+          const panel = gridInstance.addPanel(processedData);
           panel.loadFromJson(childPanel);
         }
       }

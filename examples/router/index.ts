@@ -2,6 +2,7 @@ import { createRouter, createWebHashHistory, type RouteRecordRaw } from 'vue-rou
 import BasicUseage from '../views/BasicUseage.vue'
 import SplitLayout from '../views/SplitLayout.vue'
 import DataSaveAndLoad from '../views/DataSaveAndLoad.vue'
+import LayoutStoreExample from '../views/LayoutStoreExample.vue'
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -19,6 +20,11 @@ const routes: Array<RouteRecordRaw> = [
     name: 'DataSaveAndLoad',
     component: DataSaveAndLoad,
   },
+  {
+    path: '/layout-store',
+    name: 'LayoutStoreExample',
+    component: LayoutStoreExample,
+  }
 ]
 
 const router = createRouter({

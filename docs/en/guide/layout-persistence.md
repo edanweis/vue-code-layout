@@ -135,6 +135,45 @@ const layoutState = useLayoutPersistence({
 })
 ```
 
+### Icon Persistence
+
+When saving and loading layouts, panel icons require special handling since they are functions and cannot be directly serialized to JSON. The layout persistence system includes built-in support for preserving icon information through the `defaultPanelConfig` option:
+
+```typescript
+const layoutState = useLayoutPersistence({
+  supabase,
+  layoutInstance: layoutRef,
+  defaultPanelConfig: {
+    // Function to generate panel icons based on unique name
+    iconGenerator: (uniqueName: string) => {
+      // Return appropriate icon component based on panel name
+      switch (uniqueName) {
+        case 'explorer':
+          return () => h(IconFolder)
+        case 'search':
+          return () => h(IconSearch)
+        default:
+          return () => h(IconFile)
+      }
+    }
+  }
+})
+```
+
+When a layout is saved, the system tracks which panels had icons by setting `hasIconSmall` and `hasIconLarge` flags. When loading a layout, these flags are used in combination with the `defaultPanelConfig.iconGenerator` to restore the appropriate icons.
+
+For icons to be properly restored:
+1. The panels must have had icons when the layout was saved
+2. A valid `defaultPanelConfig.iconGenerator` function must be provided when loading the layout
+
+If no `iconGenerator` is provided, panels will be loaded with null icon functions to prevent errors, but the icons will not be displayed.
+
+### Panel Close Type Persistence
+
+The layout persistence system also preserves panel close types (`unSave` or `close`). When a layout is saved, the `closeType` property of each panel is automatically included in the serialized data. When loading a layout, these close types are restored to their original values.
+
+This means that panels will maintain their close behavior preferences across save and load operations without any additional configuration required.
+
 ## Example Component
 
 Here's a complete example showing how to implement layout persistence with version control:
