@@ -10,7 +10,7 @@
           class="version-select" 
           :disabled="!auth.isLoggedIn.value || !versions.length"
         >
-          <option value="">{{ versions.length ? 'Select Version' : 'No versions saved' }}</option>
+          <option :value="null">{{ versions.length ? 'Select Version' : 'No versions saved' }}</option>
           <option v-for="version in versions" :key="version.id" :value="version">
             {{ formatVersionName(version) }}
           </option>
@@ -22,6 +22,14 @@
           :disabled="!auth.isLoggedIn.value"
         >
           Load Version
+        </button>
+        <button 
+          v-if="selectedVersion" 
+          @click="handleLoadVersionGrid" 
+          class="action-button load-version-button" 
+          :disabled="!auth.isLoggedIn.value"
+        >
+          Load Version (Grid)
         </button>
         <span v-if="selectedVersion" class="version-info">
           Created: {{ formatDate(selectedVersion.created_at) }}
@@ -61,7 +69,10 @@
               <textarea 
                 v-model="panel.data.notes" 
                 placeholder="Add notes..."
-                @input="() => panel.updateData('notes', panel.data.notes)"
+                @input="() => {
+                  panel.data.notes = (panel.data.notes || '');
+                  handleLayoutChange();
+                }"
               ></textarea>
             </div>
           </div>
@@ -124,7 +135,7 @@ import type { CodeLayoutPanelData } from '../../library/SplitLayout/SplitN'
 import { useLayout } from '../../library/Composeable/useLayout'
 
 const layout = useLayout()
-const versions = ref<ReturnType<typeof useLayoutPersistence>['versions']['value']>([]);
+const versions = ref<LayoutPersistenceVersion[]>([]);
 const selectedVersion = ref<LayoutPersistenceVersion | null>(null);
 let layoutState: ReturnType<typeof useLayoutPersistence>;
 const debug = ref(false);
@@ -219,17 +230,27 @@ const onAddPanel = (grid: CodeLayoutSplitNGridInternal) => {
   return grid.addPanel(panel);
 };
 
-const onResetAll = () => {
-  if (layout.layoutInstance.value) {
-    layout.layoutInstance.value.clearLayout();
+const onResetAll = async () => {
+  if (splitLayoutRef.value) {
+    console.log('🔄 Resetting layout...');
+    // Clear the current layout
+    splitLayoutRef.value.clearLayout();
     panelCount = 0;
-    const rootGrid = layout.layoutInstance.value.getRootGrid();
-    onAddPanel(rootGrid);
-  }
-};
 
-const onPanelReset = () => {
-  onResetAll();
+    // Add a default panel
+    const rootGrid = splitLayoutRef.value.getRootGrid();
+    onAddPanel(rootGrid);
+
+    // Save the new state if we have layout state initialized
+    if (layoutState) {
+      try {
+        await layoutState.saveState();
+        console.log('✅ Reset layout saved');
+      } catch (error) {
+        console.error('❌ Failed to save reset layout:', error);
+      }
+    }
+  }
 };
 
 const updatePanelCounter = () => {
@@ -249,88 +270,65 @@ const updatePanelCounter = () => {
   panelCount = maxNumber
 }
 
-// Initialize layout state after auth and layout instance are ready
-watch([() => auth.isLoggedIn.value], async ([isLoggedIn]) => {
-  if (debug.value) {
-    console.group('DataSaveAndLoad: Layout State Initialization')
-    console.log('Auth Status:', { 
-      isLoggedIn,
-      initialized: auth.initialized.value,
-      user: auth.user.value?.email,
-      session: !!auth.session.value
-    })
-    console.log('Layout Instance:', !!layout.layoutInstance.value)
-    console.log('Layout State Exists:', !!layoutState)
-    console.log('State ID:', stateId.value)
-  }
+const splitLayoutRef = ref();
 
-  if (isLoggedIn && layout.layoutInstance.value && !layoutState && auth.user.value?.id) {
-    if (debug.value) console.log('🔄 Initializing layout state...')
+// Update the layout instance setup
+onMounted(() => {
+  // Initialize with a default panel
+  if (splitLayoutRef.value) {
+    const rootGrid = splitLayoutRef.value.getRootGrid();
+    onAddPanel(rootGrid);
+  }
+});
+
+// Fix the layout state initialization
+watch([() => auth.isLoggedIn.value], async ([isLoggedIn]) => {
+  console.log('🔄 Checking layout state initialization:', {
+    isLoggedIn,
+    hasInstance: !!splitLayoutRef.value,
+    hasLayoutState: !!layoutState,
+    userId: auth.user.value?.id
+  });
+
+  if (isLoggedIn && splitLayoutRef.value && !layoutState && auth.user.value?.id) {
+    console.log('🔄 Initializing layout state...');
     try {
       layoutState = useLayoutPersistence({
         supabase,
         stateId: stateId.value || undefined,
-        layoutInstance: layout.layoutInstance.value,
+        layoutInstance: splitLayoutRef.value,
         autoSync: true,
-        debug: debug.value,
+        debug: true, // Always enable debug for now to help troubleshoot
         onError: (error) => {
-          console.error('❌ Layout state error:', error)
-        },
-        onBeforeSave: async () => {
-          if (debug.value) console.log('🔄 Before saving layout state...')
-        },
-        onAfterSave: async (state) => {
-          if (debug.value) console.log('✅ After saving layout state:', state.id)
-        },
-        onBeforeLoad: async () => {
-          if (debug.value) console.log('🔄 Before loading layout state...')
-        },
-        onAfterLoad: async (state) => {
-          if (debug.value) console.log('✅ After loading layout state:', state.id)
-          updatePanelCounter();
-        },
-        onBeforeCreateVersion: async () => {
-          if (debug.value) console.log('🔄 Before creating version...')
-        },
-        onAfterCreateVersion: async (version) => {
-          if (debug.value) console.log('✅ After creating version:', version.version_name)
-        },
-        onBeforeLoadVersion: async (version) => {
-          if (debug.value) console.log('🔄 Before loading version:', version.version_name)
-        },
-        onAfterLoadVersion: async (version) => {
-          if (debug.value) console.log('✅ After loading version:', version.version_name)
-          updatePanelCounter();
+          console.error('❌ Layout state error:', error);
         }
       });
 
       // Load initial state
-      if (debug.value) console.log('🔄 Loading initial state...')
+      console.log('🔄 Loading initial state...');
       await layoutState.loadState();
-      if (debug.value) console.log('✅ Layout state initialized')
-
-      // Save the state ID for future use
-      if (layoutState.currentState.value?.state_id) {
-        localStorage.setItem('lastLayoutStateId', layoutState.currentState.value.state_id);
-        // Update URL without reloading the page
-        const url = new URL(window.location.href);
-        url.searchParams.set('stateId', layoutState.currentState.value.state_id);
-        window.history.replaceState({}, '', url.toString());
-      }
+      console.log('✅ Layout state initialized');
 
       // Update versions list
       versions.value = layoutState.versions.value;
+      console.log('📝 Initial versions loaded:', versions.value);
 
       // Watch for version changes
       watch(() => layoutState.versions.value, (newVersions) => {
-        if (debug.value) console.log('Versions updated:', newVersions)
-        versions.value = newVersions;
+        console.log('🔄 Versions updated:', newVersions);
+        if (newVersions) {
+          versions.value = newVersions;
+        }
       }, { immediate: true });
+
     } catch (error) {
-      console.error('Failed to initialize layout state:', error)
+      console.error('❌ Failed to initialize layout state:', error);
+      if (error instanceof Error) {
+        console.error('Error details:', error.message);
+      }
     }
   }
-}, { immediate: true })
+}, { immediate: true });
 
 // Watch debug changes and update layout persistence
 watch(debug, (newDebug) => {
@@ -355,14 +353,31 @@ const handleSaveState = async () => {
 
 const handleCreateVersion = async () => {
   if (!layoutState) {
-    if (debug.value) console.warn('⚠️ No layout state available')
+    console.error('❌ Cannot create version: Layout state not initialized');
     return;
   }
+
+  if (!auth.isLoggedIn.value) {
+    console.error('❌ Cannot create version: User not logged in');
+    return;
+  }
+
   try {
+    // First ensure we have a saved state
+    console.log('🔄 Saving current state before creating version...');
+    await layoutState.saveState();
+    
     const versionName = `Version ${new Date().toLocaleTimeString()}`;
+    console.log('🔄 Creating new version:', versionName);
     await layoutState.createVersion(versionName);
+    
+    console.log('✅ Version created successfully');
+    console.log('Current versions:', layoutState.versions.value);
   } catch (error) {
-    if (debug.value) console.error('❌ Failed to create version:', error);
+    console.error('❌ Failed to create version:', error);
+    if (error instanceof Error) {
+      console.error('Error details:', error.message);
+    }
   }
 };
 
@@ -379,10 +394,30 @@ const handleLoadVersion = async () => {
   }
 };
 
+const handleLoadVersionGrid = async () => {
+  if (!selectedVersion.value || !layoutState) {
+    if (debug.value) console.warn('⚠️ No version or layout state available')
+    return;
+  }
+  try {
+    await layoutState.loadVersion(selectedVersion.value, { arrangement: 'grid' } as any);
+    updatePanelCounter();
+  } catch (error) {
+    if (debug.value) console.error('❌ Failed to load version:', error);
+  }
+};
+
 // Handle layout changes
-const handleLayoutChange = () => {
-  console.log('📝 Layout changed, triggering callback')
-  onLayoutChangeCallback.value?.();
+const handleLayoutChange = async () => {
+  console.log('📝 Layout changed');
+  if (layoutState) {
+    try {
+      await layoutState.saveState();
+      console.log('✅ Layout state saved automatically');
+    } catch (error) {
+      console.error('❌ Failed to auto-save layout:', error);
+    }
+  }
 };
 
 // Add these new functions
@@ -395,14 +430,6 @@ const formatDate = (dateString: string) => {
   const date = new Date(dateString)
   return date.toLocaleString()
 }
-
-onMounted(() => {
-  // Initialize with a default panel
-  if (layout.layoutInstance.value) {
-    const rootGrid = layout.layoutInstance.value.getRootGrid();
-    onAddPanel(rootGrid);
-  }
-});
 </script>
 
 <style scoped>

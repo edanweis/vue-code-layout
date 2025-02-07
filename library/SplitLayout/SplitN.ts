@@ -461,6 +461,93 @@ export class CodeLayoutSplitNGridInternal extends CodeLayoutGridInternal impleme
     this.canMinClose = json.canMinClose ?? this.canMinClose;
     super.loadFromJson(json);
   }
+
+  loadLayout(json: any, instantiatePanelCallback?: (data: CodeLayoutSplitNPanel) => CodeLayoutSplitNPanel, options?: { arrangement?: 'default' | 'grid' }) {
+    this.clearLayout();
+
+    // If using grid arrangement, collect all panels first
+    if (options?.arrangement === 'grid') {
+      const allPanels: any[] = [];
+      
+      // Helper to collect panels from the layout tree
+      function collectPanels(grid: any) {
+        if (grid.children) {
+          grid.children.forEach((child: any) => {
+            // Create panel data with instantiatePanelCallback if provided
+            const panelData = instantiatePanelCallback ? instantiatePanelCallback(child) : child;
+            allPanels.push(panelData);
+          });
+        }
+        if (grid.childGrid) {
+          grid.childGrid.forEach((childGrid: any) => collectPanels(childGrid));
+        }
+      }
+      
+      collectPanels(json);
+      
+      if (allPanels.length === 0) return;
+
+      // Calculate grid dimensions
+      const totalPanels = allPanels.length;
+      const cols = Math.ceil(Math.sqrt(totalPanels));
+      const rows = Math.ceil(totalPanels / cols);
+
+      // Create root grid structure
+      const rootGridInstance = this.getRootGrid() as CodeLayoutSplitNGridInternal;
+      rootGridInstance.direction = 'vertical';
+      
+      // Create row grids
+      for (let r = 0; r < rows; r++) {
+        const rowGrid = new CodeLayoutSplitNGridInternal(this.context);
+        Object.assign(rowGrid, {
+          direction: 'horizontal',
+          name: `row-${r}`,
+          children: [],
+          childGrid: [],
+          size: 100 / rows,
+          noAutoShink: false,
+        });
+        rootGridInstance.addChildGrid(rowGrid);
+
+        // Add panels to this row
+        for (let c = 0; c < cols; c++) {
+          const panelIndex = r * cols + c;
+          if (panelIndex < allPanels.length) {
+            rowGrid.addPanel(allPanels[panelIndex]);
+          }
+        }
+      }
+
+      return;
+    }
+
+    // Default arrangement - load layout as is
+    function loadGrid(grid: any, parentGrid: CodeLayoutSplitNGridInternal) {
+      if (grid.children) {
+        grid.children.forEach((child: any) => {
+          const panelData = instantiatePanelCallback ? instantiatePanelCallback(child) : child;
+          parentGrid.addPanel(panelData);
+        });
+      }
+      if (grid.childGrid) {
+        grid.childGrid.forEach((childGrid: any) => {
+          const newGrid = new CodeLayoutSplitNGridInternal(this.context);
+          Object.assign(newGrid, {
+            direction: childGrid.direction,
+            name: childGrid.name,
+            children: [],
+            childGrid: [],
+            size: childGrid.size,
+            noAutoShink: childGrid.noAutoShink,
+          });
+          parentGrid.addChildGrid(newGrid);
+          loadGrid(childGrid, newGrid);
+        });
+      }
+    }
+
+    loadGrid(json, this.getRootGrid() as CodeLayoutSplitNGridInternal);
+  }
 }
 
 export interface CodeLayoutInitialPanelConfig {

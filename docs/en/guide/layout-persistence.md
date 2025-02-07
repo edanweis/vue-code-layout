@@ -199,7 +199,7 @@ This is useful when you want to:
 
 ## Example Component
 
-Here's a complete example showing how to implement layout persistence with version control:
+Here's a complete example showing how to implement layout persistence with version control and grid arrangement:
 
 ```vue
 <template>
@@ -218,7 +218,10 @@ Here's a complete example showing how to implement layout persistence with versi
           </option>
         </select>
         <button v-if="selectedVersion" @click="handleLoadVersion">
-          Load Version
+          Load Version (Default)
+        </button>
+        <button v-if="selectedVersion" @click="handleLoadVersionGrid">
+          Load Version (Grid)
         </button>
       </div>
     </div>
@@ -239,7 +242,13 @@ const selectedVersion = ref(null)
 const layoutState = useLayoutPersistence({
   supabase,
   layoutInstance: layoutRef,
-  autoSync: true
+  autoSync: true,
+  defaultPanelConfig: {
+    iconGenerator: (uniqueName: string) => {
+      // Example icon generator
+      return () => h('div', { class: 'icon' }, uniqueName[0].toUpperCase())
+    }
+  }
 })
 
 // Initialize
@@ -256,13 +265,91 @@ const handleCreateVersion = async () => {
   await layoutState.createVersion(versionName)
 }
 
+const handleSaveState = async () => {
+  await layoutState.saveState()
+}
+
 const handleLoadVersion = async () => {
   if (selectedVersion.value) {
+    // Load with default arrangement (preserves original structure)
     await layoutState.loadVersion(selectedVersion.value)
   }
 }
+
+const handleLoadVersionGrid = async () => {
+  if (selectedVersion.value) {
+    // Load with grid arrangement (organizes panels in a square-like grid)
+    await layoutState.loadVersion(selectedVersion.value, { arrangement: 'grid' })
+  }
+}
+
+const formatVersionName = (version) => {
+  return `${version.version_name} (${new Date(version.created_at).toLocaleString()})`
+}
 </script>
+
+<style scoped>
+.layout-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.controls {
+  padding: 1rem;
+  background: var(--vt-c-white-soft);
+  border-bottom: 1px solid var(--vt-c-divider-light);
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+button {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--vt-c-divider-light);
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+button:hover {
+  background: var(--vt-c-white-soft);
+}
+
+.version-selector {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+select {
+  padding: 0.5rem;
+  border: 1px solid var(--vt-c-divider-light);
+  border-radius: 4px;
+  background: white;
+  font-size: 0.9rem;
+}
+
+.icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--vt-c-white-soft);
+  border-radius: 4px;
+  font-weight: 500;
+}
+</style>
 ```
+
+This example demonstrates:
+1. Basic state management with save/load functionality
+2. Version control with create/load version capabilities
+3. Grid arrangement option for loading layouts in a grid pattern
+4. Icon persistence using `defaultPanelConfig`
+5. Proper TypeScript support and error handling
 
 ## Best Practices
 

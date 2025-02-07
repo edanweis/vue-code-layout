@@ -199,68 +199,18 @@ const instance = {
     }
     panelInstances.clear();
   },
-  loadLayout(json, instantiatePanelCallback, options: { arrangement?: 'default' | 'grid' } = {}) {
-    if (!json)
-      return;
+  loadLayout(json: any, instantiatePanelCallback?: (data: CodeLayoutSplitNPanel) => CodeLayoutSplitNPanel, options?: { arrangement?: 'default' | 'grid' }) {
+    if (!json) return;
     this.clearLayout();
 
     // If using grid arrangement, collect all panels first
-    if (options.arrangement === 'grid') {
+    if (options?.arrangement === 'grid') {
       const allPanels: any[] = [];
       
       // Helper to collect panels from the layout tree
       function collectPanels(grid: any) {
         if (grid.children) {
-          allPanels.push(...grid.children);
-        }
-        if (grid.childGrid) {
-          grid.childGrid.forEach((childGrid: any) => collectPanels(childGrid));
-        }
-      }
-      
-      collectPanels(json);
-      
-      if (allPanels.length === 0) return;
-
-      // Calculate grid dimensions
-      const totalPanels = allPanels.length;
-      const cols = Math.ceil(Math.sqrt(totalPanels));
-      const rows = Math.ceil(totalPanels / cols);
-
-      // Create root grid structure
-      const rootGridInstance = rootGrid.value as CodeLayoutSplitNGridInternal;
-      rootGridInstance.direction = 'vertical';
-      
-      // Create row grids
-      for (let r = 0; r < rows; r++) {
-        const rowGrid = new CodeLayoutSplitNGridInternal(hosterContext);
-        Object.assign(rowGrid, {
-          direction: 'horizontal',
-          name: `row-${r}`,
-          children: [],
-          childGrid: [],
-          size: 100 / rows,
-          noAutoShink: false,
-        });
-
-        // Create column grids within each row
-        const panelsInRow = Math.min(cols, totalPanels - (r * cols));
-        for (let c = 0; c < panelsInRow; c++) {
-          const colGrid = new CodeLayoutSplitNGridInternal(hosterContext);
-          Object.assign(colGrid, {
-            direction: 'vertical',
-            name: `col-${r}-${c}`,
-            children: [],
-            childGrid: [],
-            size: 100 / panelsInRow,
-            noAutoShink: false,
-          });
-
-          // Get panel for this position
-          const panelIndex = r * cols + c;
-          if (panelIndex < totalPanels) {
-            const childPanel = allPanels[panelIndex];
-            
+          grid.children.forEach((childPanel: any) => {
             // Create base panel data
             const panelData = {
               ...childPanel,
@@ -282,16 +232,66 @@ const instance = {
               }
             }
 
-            // Process panel through callback and add to grid
-            const processedData = instantiatePanelCallback(panelData);
-            const panel = colGrid.addPanel(processedData);
-            panel.loadFromJson(childPanel);
-          }
-
-          rowGrid.addChildGrid(colGrid);
+            // Process panel through callback if provided
+            const processedData = instantiatePanelCallback ? instantiatePanelCallback(panelData) : panelData;
+            allPanels.push(processedData);
+          });
         }
+        if (grid.childGrid) {
+          grid.childGrid.forEach((childGrid: any) => collectPanels(childGrid));
+        }
+      }
+      
+      collectPanels(json);
+      
+      if (allPanels.length === 0) return;
 
+      // Calculate grid dimensions
+      const totalPanels = allPanels.length;
+      const cols = Math.ceil(Math.sqrt(totalPanels));
+      const rows = Math.ceil(totalPanels / cols);
+
+      // Create root grid structure
+      const rootGridInstance = rootGrid.value as CodeLayoutSplitNGridInternal;
+      rootGridInstance.direction = 'vertical';
+      rootGridInstance.childGrid = []; // Clear existing child grids
+      rootGridInstance.children = []; // Clear existing children
+      
+      // Create row grids
+      for (let r = 0; r < rows; r++) {
+        const rowGrid = new CodeLayoutSplitNGridInternal(hosterContext);
+        Object.assign(rowGrid, {
+          direction: 'horizontal',
+          name: `row-${r}`,
+          children: [],
+          childGrid: [],
+          size: 100 / rows,
+          noAutoShink: false,
+        });
         rootGridInstance.addChildGrid(rowGrid);
+
+        // Add panels to this row
+        const panelsInRow = Math.min(cols, totalPanels - (r * cols));
+        for (let c = 0; c < panelsInRow; c++) {
+          const panelIndex = r * cols + c;
+          if (panelIndex < allPanels.length) {
+            // Create a vertical grid for each panel
+            const panelGrid = new CodeLayoutSplitNGridInternal(hosterContext);
+            Object.assign(panelGrid, {
+              direction: 'vertical',
+              name: `panel-grid-${r}-${c}`,
+              children: [],
+              childGrid: [],
+              size: 100 / panelsInRow,
+              noAutoShink: false,
+            });
+            rowGrid.addChildGrid(panelGrid);
+
+            // Add the panel to its vertical grid
+            const panel = panelGrid.addPanel(allPanels[panelIndex]);
+            panel.size = 100; // Take full height of its grid
+          }
+        }
       }
 
       rootGridInstance.notifyRelayout();
@@ -309,7 +309,7 @@ const instance = {
           gridInstance.addChildGrid(childGridInstance);
         }
         gridInstance.notifyRelayout()
-      } else if (grid.childGrid instanceof Array) {
+      } else if (grid.children instanceof Array) {
         for (const childPanel of grid.children) {
           // Create base panel data
           const panelData = {
@@ -333,7 +333,7 @@ const instance = {
           }
 
           // Let the callback further process the panel
-          const processedData = instantiatePanelCallback(panelData);
+          const processedData = instantiatePanelCallback ? instantiatePanelCallback(panelData) : panelData;
           const panel = gridInstance.addPanel(processedData);
           panel.loadFromJson(childPanel);
         }
@@ -580,14 +580,21 @@ function dragDropToPanel(
 
     newGrid.setActiveChild(panel);
 
+    // Handle root grid case
     if (targetGrid === rootGrid.value) {
       rootGrid.value = newGridTop;
       rootGrid.value.noAutoShink = true;
     }
-    else {
-      if (!oldTargetGridParent)
-        throw new Error('oldTargetGridParent is null');
+    // Handle case where oldTargetGridParent exists
+    else if (oldTargetGridParent) {
       oldTargetGridParent.replaceChildGrid(targetGrid, newGridTop);
+    }
+    // Handle case where we need to create a new root structure
+    else {
+      rootGrid.value = newGridTop;
+      rootGrid.value.noAutoShink = true;
+      rootGrid.value.accept = [props.rootGridType];
+      rootGrid.value.parentGrid = props.rootGridType;
     }
 
     //重新布局面板

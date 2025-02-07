@@ -376,7 +376,7 @@ export function useLayoutPersistence(options: UseLayoutPersistenceOptions) {
   }
 
   // Load version
-  const loadVersion = async (version: LayoutPersistenceVersion) => {
+  const loadVersion = async (version: LayoutPersistenceVersion, options?: { arrangement?: 'default' | 'grid' }) => {
     isLoading.value = true
     error.value = null
     try {
@@ -397,7 +397,7 @@ export function useLayoutPersistence(options: UseLayoutPersistenceOptions) {
             actions: panelData.hasActions ? [] : undefined,
           };
           return panel;
-        })
+        }, options) // Pass the options to loadLayout
       } else {
         const grid = layoutInstance.getRootGrid()
         grid.fromJSON(layout)
