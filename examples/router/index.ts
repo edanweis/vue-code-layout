@@ -3,6 +3,7 @@ import BasicUseage from '../views/BasicUseage.vue'
 import SplitLayout from '../views/SplitLayout.vue'
 import DataSaveAndLoad from '../views/DataSaveAndLoad.vue'
 import LayoutStoreExample from '../views/LayoutStoreExample.vue'
+import AdvancedLayoutStore from '../views/AdvancedLayoutStore.vue'
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -24,6 +25,11 @@ const routes: Array<RouteRecordRaw> = [
     path: '/layout-store',
     name: 'LayoutStoreExample',
     component: LayoutStoreExample,
+  },
+  {
+    path: '/advanced-layout-store',
+    name: 'AdvancedLayoutStore',
+    component: AdvancedLayoutStore,
   }
 ]
 

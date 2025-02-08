@@ -3,9 +3,10 @@
     <div class="test-top">
       <div>
         <h1>Vue Code layout</h1>
-        <router-link :to="{ name: 'BasicUseage' }" class="link first">Base Layou useage</router-link>
+        <router-link :to="{ name: 'BasicUseage' }" class="link first">Base Layout Usage</router-link>
         <router-link :to="{ name: 'SplitLayout' }" class="link first">Split Layout</router-link>
-        <router-link :to="{ name: 'DataSaveAndLoad' }" class="link first">Load and save</router-link>
+        <router-link :to="{ name: 'DataSaveAndLoad' }" class="link first">Load and Save</router-link>
+        <router-link :to="{ name: 'AdvancedLayoutStore' }" class="link first">Advanced Store</router-link>
         <!-- <router-link :to="{ name: 'Theme' }">Custom Style</router-link> -->
       </div>
       <div>

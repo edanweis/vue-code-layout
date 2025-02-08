@@ -394,7 +394,7 @@ export class CodeLayoutPanelInternal extends LateClass implements CodeLayoutPane
   startOpen?: boolean|undefined;
   iconLarge?: string|(() => VNode)|undefined;
   iconSmall?: string|(() => VNode)|undefined;
-  closeType: CodeLayoutPanelCloseType = 'none';
+  closeType: CodeLayoutPanelCloseType = 'close';
   actions?: CodeLayoutActionButton[]|undefined;
   data?: any = undefined;
 

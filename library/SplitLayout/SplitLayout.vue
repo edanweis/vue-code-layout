@@ -90,7 +90,7 @@ const props = defineProps({
    */
   autoHandleClose: {
     type: Boolean,
-    default: false
+    default: true
   }
 })
 
