@@ -265,7 +265,7 @@ export function useLayoutPersistence(options: UseLayoutPersistenceOptions) {
         throw new Error('Layout instance does not have saveLayout or getRootGrid method')
       }
 
-      // Generate or use existing state ID
+      // Use existing state ID if available, otherwise use provided initial ID or generate new one
       const stateId = currentState.value?.state_id || initialStateId || crypto.randomUUID()
       log('Using state ID', stateId)
 
@@ -303,6 +303,21 @@ export function useLayoutPersistence(options: UseLayoutPersistenceOptions) {
 
         if (insertError) throw insertError
         result = data
+      }
+
+      // Ensure state_id is consistent
+      if (result.state_id !== stateId) {
+        // If there's a mismatch, update the record to use our state_id
+        log('State ID mismatch detected, updating to ensure consistency', { expected: stateId, received: result.state_id })
+        const { data: updatedData, error: updateError } = await supabase
+          .from(tables.states)
+          .update({ [columns.stateId]: stateId })
+          .eq('id', result.id)
+          .select()
+          .single()
+
+        if (updateError) throw updateError
+        result = updatedData
       }
 
       log('State saved successfully', result)
@@ -344,10 +359,10 @@ export function useLayoutPersistence(options: UseLayoutPersistenceOptions) {
         throw new Error('Layout instance does not have saveLayout or getRootGrid method')
       }
 
-      // Create the version
+      // Create the version using the primary key id, not the state_id
       log('Creating version in database')
       const newVersionData = {
-        state_id: currentState.value.id,
+        state_id: currentState.value.id, // This is correct - using the primary key as foreign key
         [columns.versionName]: versionName,
         [columns.layout]: layout,
         ...getAdditionalData(additionalVersionData), // Default additional data
@@ -364,7 +379,7 @@ export function useLayoutPersistence(options: UseLayoutPersistenceOptions) {
 
       log('Version created successfully', createdVersion)
 
-      // Refresh versions list
+      // Refresh versions list using the primary key id
       await fetchVersions(currentState.value.id)
     } catch (err) {
       error.value = err
