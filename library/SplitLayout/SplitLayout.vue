@@ -82,15 +82,6 @@ const props = defineProps({
   lastActive: {
     type: Object as PropType<CodeLayoutPanelInternal|null>,
     default: null
-  },
-  /**
-   * Whether to automatically handle panel closing without requiring a panelClose event handler.
-   * When true, panels will be closed immediately without confirmation.
-   * When false (default), you must handle the panelClose event to close panels.
-   */
-  autoHandleClose: {
-    type: Boolean,
-    default: true
   }
 })
 
@@ -423,15 +414,15 @@ function onTabActiveChild(old: CodeLayoutSplitNPanelInternal, panel: CodeLayoutS
 }
 
 function onPanelClose(panel: CodeLayoutSplitNPanelInternal) {
-  // If autoHandleClose is true, resolve immediately without emitting event
-  if (props.autoHandleClose) {
-    panel.parentGroup?.removePanel(panel);
-    panel.onClose?.(panel);
-    return Promise.resolve();
-  }
-  
-  // Otherwise emit event and wait for handler
-  return new Promise<void>((resolve, reject) => emit('panelClose', panel, resolve, reject))
+  return new Promise<void>((resolve, reject) => {
+    // If panel has onClose handler, use it
+    if (panel.onClose) {
+      emit('panelClose', panel, resolve, reject);
+    } else {
+      // No onClose handler, resolve immediately
+      resolve();
+    }
+  })
       .then(() => {
         panel.parentGroup?.removePanel(panel);
         panel.onClose?.(panel);
